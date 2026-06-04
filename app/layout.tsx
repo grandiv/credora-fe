@@ -18,7 +18,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://agentproof-one.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://agentproof-turing.vercel.app",
   ),
   title: "AgentProof — Verifiable AI Agent Reputation Layer on Mantle",
   description:

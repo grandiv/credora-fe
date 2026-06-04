@@ -1,0 +1,157 @@
+# AgentProof — Design Guideline
+
+> For building the **pitch deck** and **demo video**. This is the single source of truth for brand, voice, colours, type, and the product story. Match the live site: **https://agentproof-turing.vercel.app**
+
+---
+
+## 1. The one-liner
+
+**AgentProof — Proof, not promises.**
+The verifiable reputation layer for AI agents on Mantle. Every agent decision — confidence, risk, rationale, result — is written on-chain and impossible to fake.
+
+**Elevator (15s):** "Every AI trading bot claims it makes money. Almost none can prove it. AgentProof gives each agent an on-chain passport and logs every decision to Mantle, so anyone can verify the real track record — not the marketing."
+
+---
+
+## 2. The problem → solution story (use this arc in the deck & video)
+
+1. **The trust gap.** AI trading/alpha agents are everywhere. Performance is self-reported, screenshots are cherry-picked, track records start at the last winning trade. You can't tell skill from luck from lies.
+2. **The insight.** Trust shouldn't be a claim — it should be a record. Blockchains are built for exactly this.
+3. **AgentProof.** A neutral trust layer:
+   - Each agent gets an **ERC-8004 identity passport** (NFT).
+   - Every decision is logged on-chain via a **DecisionLogger** contract (action, confidence, risk score, rationale hash, result).
+   - A **ReputationScore** contract derives win-rate / ROI / rank.
+   - A public **leaderboard** ranks agents by *verifiable results, not reach*.
+4. **Why it wins.** It's not one more agent — it's the infrastructure every agent on Mantle can plug into. Ecosystem contribution, not a point solution.
+
+**Killer line for the deck:** *"We didn't build one more agent. We built the trust layer every agent on Mantle can plug into."*
+
+---
+
+## 3. Brand voice
+
+- **Confident, plain, technical.** Short sentences. No hype words ("revolutionary", "next-gen"). The product's whole point is *less* hype.
+- **Proof-oriented vocabulary:** verify, on-chain, record, track record, provable, tamper-evident, reconstructable from a tx hash.
+- **Contrast framing** is the signature rhetorical move: *claims vs proof*, *reach vs results*, *trusting vs verifying*.
+- Recurring taglines (use verbatim):
+  - "Proof, not promises."
+  - "Ranked by results, not by reach."
+  - "Stop trusting. Start verifying."
+  - "From a hunch to a hash."
+
+---
+
+## 4. Colour palette — "Heritage Petrol"
+
+Dark, warm, institutional. **One accent only** (burnt orange) — never introduce a second accent colour.
+
+| Role | Name | Hex | Use for |
+| --- | --- | --- | --- |
+| Base background | Deep Petrol | `#17313A` | slide backgrounds |
+| Deepest well | Petrol Black | `#0F2128` | gradient bottoms, footers |
+| Panel / card | Petrol Slate | `#1D3C45` | cards, surfaces |
+| Hairline border | Petrol Line | `#34585F` | dividers, card borders |
+| **Accent** | **Burnt Orange** | **`#D2601A`** | CTAs, key words, highlights, the orb |
+| Primary text | Warm Cream | `#FFF1E1` | headlines, body |
+| Secondary text | Warm Taupe | `#B3A899` | sub-copy, labels |
+| Tertiary text | Muted | `#7E7163` | captions, mono labels |
+| Loss / negative | Warm Red | `#E36A5A` | down values only |
+| On-accent text | Near Black | `#0B0E10` | text *on* orange buttons (AA contrast) |
+
+**Rules**
+- Orange is precious — use it for *one* focal thing per view (a CTA, a key metric, one headline word). Never large orange fills behind text.
+- Background gradient (hero / title slides): radial from `#21454F` (top) → `#17313A` → `#0F2128` (bottom).
+- Text on orange must be `#0B0E10` (not petrol) — that's the AA-contrast-safe pairing.
+- Keep it **dark**. No light/white slides — it breaks the brand instantly.
+
+---
+
+## 5. Typography
+
+| Tier | Font | Where |
+| --- | --- | --- |
+| Display | **Clash Display** (600/700) | big headlines, slide titles, the wordmark |
+| Body | **IBM Plex Sans** (400/500/600) | paragraphs, captions, deck body |
+| Data / mono | **IBM Plex Mono** (400/500) | numbers, hashes, addresses, code, labels, "on-chain" feel |
+
+- Free fonts: Clash Display → [fontshare.com](https://www.fontshare.com/fonts/clash-display); IBM Plex → Google Fonts.
+- Headline style: tight tracking (`-2%`), line-height ~0.95, sentence case. Example: "Proof," on line one, "not **promises.**" on line two (the second word in orange).
+- Always set numbers, %, $ and tx hashes in **IBM Plex Mono** — it's a core part of the "verifiable" feel.
+- Wordmark: "Agent" in cream + "Proof" in orange, no space: **Agent​Proof**.
+
+---
+
+## 6. Logo
+
+A hexagonal "passport" shield with a verification check inside, drawn in burnt orange. It reads as *identity + verified*. Use the version from the live site (top-left). Minimum clear space = the height of the "A" in AgentProof around all sides. On dark only.
+
+---
+
+## 7. Visual motifs to reuse in the deck
+
+- **The Proof Core** — the morphing orange orb from the hero. It *is* the brand visual. Screen-grab it for the title slide and section dividers.
+- **Faint grid** — a barely-visible warm grid (`rgba(190,150,110,0.05)`, 64px) behind dark sections. Adds "engineered infrastructure" texture.
+- **Hairline cards** — content sits in petrol-slate cards with thin `#34585F` borders and generous padding. Never heavy drop-shadows.
+- **Mono data chips** — small rounded pills with mono text for actions (`BUY`, `HOLD`, `ALERT`), confidence (`78%`), and tx hashes.
+- **Contrast pairs** — two columns: the dull/grey "old way" vs the orange-accented "AgentProof way". Mirror the site's Problem section.
+
+---
+
+## 8. Demo video — exact run-of-show (target ≥ 2 min for the Deployment Award)
+
+Record on **https://agentproof-turing.vercel.app**. Suggested narration in *italics*.
+
+| # | Time | Screen | Action & narration |
+| --- | --- | --- | --- |
+| 1 | 0:00–0:15 | Landing hero | *"Every AI agent claims alpha. Almost none can prove it."* Let the orb morph; scroll slightly to show the live decision ticker. |
+| 2 | 0:15–0:35 | Landing — Problem | Scroll to the claims-vs-proof comparison. *"AgentProof closes the gap — every decision becomes an on-chain record."* |
+| 3 | 0:35–0:50 | Landing — How it works | Horizontal-scroll the 4-step pipeline (Passport → Decision → Log → Reputation). Pause on the `Decision.sol` struct card. |
+| 4 | 0:50–1:05 | Click **Launch App** → `/app` | *"This is the console."* Show the dashboard: leaderboard + live decision feed + stats. |
+| 5 | 1:05–1:20 | Dashboard | Click the **ROI** sort toggle — leaderboard reorders live. Click a **live decision** → the **Decision Proof** modal opens (confidence, risk, rationale, tx hash). *"Every metric is reconstructable from a Mantle tx hash."* |
+| 6 | 1:20–1:40 | Open an **Agent Passport** | Click an agent → show ERC-8004 identity, the reputation chart, and the full decision history. Open one history row → proof modal. |
+| 7 | 1:40–2:05 | **Register** flow | Walk Identity → Strategy → Review → **Mint passport**. Show the "minting on Mantle…" → "Passport minted" success with agent ID + tx hash. *"Any builder can give their agent a provable reputation in under a minute."* |
+| 8 | 2:05–2:20 | Close | Back to landing CTA — *"Stop trusting. Start verifying. AgentProof, on Mantle."* End on the logo + URL. |
+
+**Recording tips:** 1280×800 or 1920×1080, hide bookmarks bar, dark OS theme, smooth slow scrolls (the motion is part of the pitch), cursor visible for clicks. The count-up stats animate on load — let them finish before narrating a number.
+
+---
+
+## 9. Deck structure (10–12 slides)
+
+1. **Title** — logo, "Proof, not promises.", the orb, URL.
+2. **Problem** — the trust gap (claims vs proof). One stat or quote.
+3. **Insight** — trust should be a record, not a claim.
+4. **Solution** — AgentProof in one diagram (Passport · DecisionLogger · ReputationScore · Leaderboard).
+5. **How it works** — the 4-step pipeline.
+6. **Product** — 2–3 real screens (dashboard, passport, proof modal). Screens > words.
+7. **Why on-chain / why Mantle** — permanent record, ERC-8004 identity, ecosystem fit.
+8. **Differentiation** — the "AI trading bot vs AgentProof" table (claims→proof, hidden risk→risk score, etc.).
+9. **Target users** — DeFi traders, agent builders, Mantle protocols.
+10. **Business model** — SaaS dashboard, API for agent track records, listing fees, premium analytics, protocol integrations.
+11. **Track fit** — Primary: AI Alpha & Data · Secondary: AI DevTools · Deployment Award.
+12. **Close** — "Stop trusting. Start verifying." + links (live demo, repo).
+
+**Slide design rules:** dark petrol background, one idea per slide, max ~15 words of text, one orange focal point, data in mono. Let the product screenshots carry the weight.
+
+---
+
+## 10. Boilerplate copy (paste-ready)
+
+**Short description:** AgentProof is the verifiable reputation layer for AI agents on Mantle. It issues each agent an ERC-8004 identity and logs every decision on-chain, so users can rank and trust agents by provable track record instead of marketing claims.
+
+**Tags:** Mantle · ERC-8004 · AI agents · on-chain reputation · DeFi · verifiable AI · AI Alpha & Data
+
+**Links:**
+- Live demo: https://agentproof-turing.vercel.app
+- Repo: https://github.com/grandiv/agentproof
+
+---
+
+## 11. Don'ts
+
+- ❌ No second accent colour. Orange is the only accent.
+- ❌ No light/white slide backgrounds.
+- ❌ No generic stock "AI brain / glowing circuit" imagery — use the real product and the Proof Core.
+- ❌ Don't set numbers/hashes in the body font — always IBM Plex Mono.
+- ❌ Don't overclaim. The brand's credibility *is* the restraint. Say "verifiable", not "guaranteed profits".
+- ❌ Don't crowd slides — one idea, lots of dark space.
