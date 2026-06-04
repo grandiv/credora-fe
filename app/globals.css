@@ -1,0 +1,261 @@
+/* Clash Display — architectural display face for headlines (Fontshare) */
+@import url("https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* ── Heritage Petrol — petrol base, burnt-orange accent, cream text ── */
+  --color-navy: #17313a; /* base background — deep petrol      */
+  --color-navy-deep: #0f2128; /* deepest well                  */
+  --color-cyan: #d2601a; /* burnt orange — the single accent   */
+  --color-gold: #d2601a; /* collapsed into the one accent      */
+  --color-slate: #1d3c45; /* raised surface / panel (petrol)   */
+  --color-slate-line: #34585f; /* petrol hairline borders      */
+  --color-ink: #fff1e1; /* primary text — warm cream           */
+  --color-muted: #b3a899; /* secondary text — warm taupe       */
+  --color-faint: #7e7163; /* tertiary text                     */
+
+  /* semantic — used sparingly */
+  --color-profit: #d2601a;
+  --color-loss: #e36a5a;
+
+  /* ── Fonts ── */
+  --font-display: "Clash Display", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-ibm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ibm-mono), ui-monospace, "IBM Plex Mono", monospace;
+
+  /* ── Motion ── */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-ticker: ticker 34s linear infinite;
+  --animate-float: float 8s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* transform-only headline entrance — keeps opacity:1 so the LCP element
+   paints at first contentful paint (no JS/hydration dependency) */
+@keyframes hero-rise {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+* {
+  border-color: var(--color-slate-line);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* quiet depth — a single soft warm wash, nothing busy */
+  background:
+    radial-gradient(
+      130% 80% at 50% -20%,
+      #21454f 0%,
+      var(--color-navy) 46%,
+      var(--color-navy-deep) 100%
+    );
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-cyan);
+  color: var(--color-ink);
+}
+
+/* keyboard-only focus ring — accessible without hurting mouse users */
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-navy-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-line);
+  border-radius: 999px;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* applied to the LCP headline — paints immediately, gentle rise only */
+  .hero-rise {
+    animation: hero-rise 0.7s var(--ease-out-quint) both;
+  }
+
+  /* whisper-faint structural grid */
+  .bg-grid {
+    background-image: linear-gradient(
+        to right,
+        rgba(190, 150, 110, 0.05) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(190, 150, 110, 0.05) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+  .bg-grid-fine {
+    background-image: linear-gradient(
+        to right,
+        rgba(190, 150, 110, 0.06) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(190, 150, 110, 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* one soft accent wash — barely there */
+  .aurora {
+    background: radial-gradient(
+      60rem 44rem at 50% 0%,
+      rgba(210, 96, 26, 0.06),
+      transparent 62%
+    );
+  }
+
+  .vignette {
+    background: radial-gradient(
+      120% 90% at 50% 30%,
+      transparent 58%,
+      rgba(8, 22, 27, 0.55) 100%
+    );
+  }
+
+  /* solid, calm headline — no rainbow gradients */
+  .text-gradient {
+    background: linear-gradient(
+      180deg,
+      var(--color-ink) 0%,
+      #c9a98f 135%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-accent {
+    color: var(--color-cyan);
+  }
+
+  /* refined glass surface */
+  .panel {
+    background: rgba(20, 38, 44, 0.55);
+    border: 1px solid rgba(190, 150, 110, 0.1);
+    backdrop-filter: blur(18px) saturate(1.05);
+  }
+  .panel-solid {
+    background: var(--color-slate);
+    border: 1px solid var(--color-slate-line);
+  }
+
+  /* hairline top sheen, very subtle */
+  .panel-sheen {
+    position: relative;
+  }
+  .panel-sheen::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(210, 96, 26, 0.25),
+      transparent
+    );
+  }
+
+  /* a single restrained glow */
+  .glow-accent {
+    box-shadow: 0 24px 70px -28px rgba(210, 96, 26, 0.28);
+  }
+
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 8%,
+      black 92%,
+      transparent
+    );
+  }
+
+  /* legacy aliases kept as no-ops / soft so older markup stays calm */
+  .glow-cyan {
+    box-shadow: 0 24px 70px -28px rgba(210, 96, 26, 0.28);
+  }
+  .glow-gold {
+    box-shadow: 0 24px 70px -28px rgba(210, 96, 26, 0.22);
+  }
+  .grain::after {
+    content: none;
+  }
+  .ring-dotted-cyan {
+    background-image: radial-gradient(
+      circle,
+      rgba(190, 150, 110, 0.18) 1px,
+      transparent 1.4px
+    );
+    background-size: 11px 11px;
+  }
+  .text-gradient-gold {
+    color: var(--color-gold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
