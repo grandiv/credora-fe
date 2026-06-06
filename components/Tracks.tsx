@@ -8,7 +8,7 @@ const TRACKS = [
     icon: Database,
     tag: "Primary track",
     title: "AI Alpha & Data",
-    body: "AgentProof turns live Mantle on-chain data into verifiable alpha — smart-money tracking, anomaly detection and analytics, every insight backed by a tx hash.",
+    body: "Credora turns live Mantle on-chain data into verifiable alpha — smart-money tracking, anomaly detection and analytics, every insight backed by a tx hash.",
     points: ["On-chain data as the core source", "Verifiable, not cherry-picked", "Insight value you can audit"],
     accent: "cyan",
   },

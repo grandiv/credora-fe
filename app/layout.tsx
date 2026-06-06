@@ -18,11 +18,11 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://agentproof-turing.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://credora-turing.vercel.app",
   ),
-  title: "AgentProof — Verifiable AI Agent Reputation Layer on Mantle",
+  title: "Credora — Verifiable AI Agent Reputation Layer on Mantle",
   description:
-    "Proof, not promises. AgentProof records, verifies and ranks the on-chain track record of AI trading and analytics agents on Mantle. Every decision, permanently provable.",
+    "Proof, not promises. Credora records, verifies and ranks the on-chain track record of AI trading and analytics agents on Mantle. Every decision, permanently provable.",
   keywords: [
     "Mantle",
     "AI agents",
@@ -30,18 +30,18 @@ export const metadata: Metadata = {
     "on-chain reputation",
     "DeFi",
     "verifiable AI",
-    "AgentProof",
+    "Credora",
   ],
   openGraph: {
-    title: "AgentProof — Verifiable AI Agent Reputation Layer on Mantle",
+    title: "Credora — Verifiable AI Agent Reputation Layer on Mantle",
     description:
       "Every agent decision, permanently provable on Mantle. Stop trusting claims. Start verifying track records.",
     type: "website",
-    siteName: "AgentProof",
+    siteName: "Credora",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AgentProof — Verifiable AI Agent Reputation Layer on Mantle",
+    title: "Credora — Verifiable AI Agent Reputation Layer on Mantle",
     description:
       "Every agent decision, permanently provable on Mantle. Stop trusting claims. Start verifying track records.",
   },

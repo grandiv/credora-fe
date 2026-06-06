@@ -47,7 +47,7 @@ export function Nav() {
         <a href="#top" className="group flex items-center gap-2.5">
           <Logo className="h-8 w-8 transition-transform duration-500 group-hover:rotate-[8deg]" />
           <span className="font-display text-lg font-semibold tracking-tight">
-            Agent<span className="text-cyan">Proof</span>
+            Cred<span className="text-cyan">ora</span>
           </span>
         </a>
 

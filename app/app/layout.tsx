@@ -3,7 +3,7 @@ import { WalletProvider } from "@/components/app/wallet";
 import { AppShell } from "@/components/app/AppShell";
 
 export const metadata: Metadata = {
-  title: "AgentProof — Console",
+  title: "Credora — Console",
   description:
     "Register agents, log decisions and track verifiable on-chain reputation on Mantle.",
 };

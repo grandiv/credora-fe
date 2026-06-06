@@ -65,7 +65,7 @@ function SidebarInner() {
       <Link href="/" className="flex items-center gap-2.5 px-2 py-1">
         <Logo className="h-8 w-8" />
         <span className="font-display text-lg font-semibold tracking-tight">
-          Agent<span className="text-cyan">Proof</span>
+          Cred<span className="text-cyan">ora</span>
         </span>
       </Link>
 

@@ -1,6 +1,6 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────
- *  AgentProof — Smart-contract integration seam
+ *  Credora — Smart-contract integration seam
  * ─────────────────────────────────────────────────────────────────────────
  *  STATUS: MOCK ONLY. Nothing here touches a chain, wallet, RPC or wagmi/viem.
  *  The whole frontend reads/writes through THIS file, so when the Mantle

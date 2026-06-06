@@ -1,15 +1,15 @@
-# AgentProof — Design Guideline
+# Credora — Design Guideline
 
-> For building the **pitch deck** and **demo video**. This is the single source of truth for brand, voice, colours, type, and the product story. Match the live site: **https://agentproof-turing.vercel.app**
+> For building the **pitch deck** and **demo video**. This is the single source of truth for brand, voice, colours, type, and the product story. Match the live site: **https://credora-turing.vercel.app**
 
 ---
 
 ## 1. The one-liner
 
-**AgentProof — Proof, not promises.**
+**Credora — Proof, not promises.**
 The verifiable reputation layer for AI agents on Mantle. Every agent decision — confidence, risk, rationale, result — is written on-chain and impossible to fake.
 
-**Elevator (15s):** "Every AI trading bot claims it makes money. Almost none can prove it. AgentProof gives each agent an on-chain passport and logs every decision to Mantle, so anyone can verify the real track record — not the marketing."
+**Elevator (15s):** "Every AI trading bot claims it makes money. Almost none can prove it. Credora gives each agent an on-chain passport and logs every decision to Mantle, so anyone can verify the real track record — not the marketing."
 
 ---
 
@@ -17,7 +17,7 @@ The verifiable reputation layer for AI agents on Mantle. Every agent decision �
 
 1. **The trust gap.** AI trading/alpha agents are everywhere. Performance is self-reported, screenshots are cherry-picked, track records start at the last winning trade. You can't tell skill from luck from lies.
 2. **The insight.** Trust shouldn't be a claim — it should be a record. Blockchains are built for exactly this.
-3. **AgentProof.** A neutral trust layer:
+3. **Credora.** A neutral trust layer:
    - Each agent gets an **ERC-8004 identity passport** (NFT).
    - Every decision is logged on-chain via a **DecisionLogger** contract (action, confidence, risk score, rationale hash, result).
    - A **ReputationScore** contract derives win-rate / ROI / rank.
@@ -77,13 +77,13 @@ Dark, warm, institutional. **One accent only** (burnt orange) — never introduc
 - Free fonts: Clash Display → [fontshare.com](https://www.fontshare.com/fonts/clash-display); IBM Plex → Google Fonts.
 - Headline style: tight tracking (`-2%`), line-height ~0.95, sentence case. Example: "Proof," on line one, "not **promises.**" on line two (the second word in orange).
 - Always set numbers, %, $ and tx hashes in **IBM Plex Mono** — it's a core part of the "verifiable" feel.
-- Wordmark: "Agent" in cream + "Proof" in orange, no space: **Agent​Proof**.
+- Wordmark: "Cred" in cream + "ora" in orange, no space: **Credora** (the "ora" carries the accent).
 
 ---
 
 ## 6. Logo
 
-A hexagonal "passport" shield with a verification check inside, drawn in burnt orange. It reads as *identity + verified*. Use the version from the live site (top-left). Minimum clear space = the height of the "A" in AgentProof around all sides. On dark only.
+A hexagonal "passport" shield with a verification check inside, drawn in burnt orange. It reads as *identity + verified*. Use the version from the live site (top-left). Minimum clear space = the height of the "C" in Credora around all sides. On dark only.
 
 ---
 
@@ -93,24 +93,24 @@ A hexagonal "passport" shield with a verification check inside, drawn in burnt o
 - **Faint grid** — a barely-visible warm grid (`rgba(190,150,110,0.05)`, 64px) behind dark sections. Adds "engineered infrastructure" texture.
 - **Hairline cards** — content sits in petrol-slate cards with thin `#34585F` borders and generous padding. Never heavy drop-shadows.
 - **Mono data chips** — small rounded pills with mono text for actions (`BUY`, `HOLD`, `ALERT`), confidence (`78%`), and tx hashes.
-- **Contrast pairs** — two columns: the dull/grey "old way" vs the orange-accented "AgentProof way". Mirror the site's Problem section.
+- **Contrast pairs** — two columns: the dull/grey "old way" vs the orange-accented "Credora way". Mirror the site's Problem section.
 
 ---
 
 ## 8. Demo video — exact run-of-show (target ≥ 2 min for the Deployment Award)
 
-Record on **https://agentproof-turing.vercel.app**. Suggested narration in *italics*.
+Record on **https://credora-turing.vercel.app**. Suggested narration in *italics*.
 
 | # | Time | Screen | Action & narration |
 | --- | --- | --- | --- |
 | 1 | 0:00–0:15 | Landing hero | *"Every AI agent claims alpha. Almost none can prove it."* Let the orb morph; scroll slightly to show the live decision ticker. |
-| 2 | 0:15–0:35 | Landing — Problem | Scroll to the claims-vs-proof comparison. *"AgentProof closes the gap — every decision becomes an on-chain record."* |
+| 2 | 0:15–0:35 | Landing — Problem | Scroll to the claims-vs-proof comparison. *"Credora closes the gap — every decision becomes an on-chain record."* |
 | 3 | 0:35–0:50 | Landing — How it works | Horizontal-scroll the 4-step pipeline (Passport → Decision → Log → Reputation). Pause on the `Decision.sol` struct card. |
 | 4 | 0:50–1:05 | Click **Launch App** → `/app` | *"This is the console."* Show the dashboard: leaderboard + live decision feed + stats. |
 | 5 | 1:05–1:20 | Dashboard | Click the **ROI** sort toggle — leaderboard reorders live. Click a **live decision** → the **Decision Proof** modal opens (confidence, risk, rationale, tx hash). *"Every metric is reconstructable from a Mantle tx hash."* |
 | 6 | 1:20–1:40 | Open an **Agent Passport** | Click an agent → show ERC-8004 identity, the reputation chart, and the full decision history. Open one history row → proof modal. |
 | 7 | 1:40–2:05 | **Register** flow | Walk Identity → Strategy → Review → **Mint passport**. Show the "minting on Mantle…" → "Passport minted" success with agent ID + tx hash. *"Any builder can give their agent a provable reputation in under a minute."* |
-| 8 | 2:05–2:20 | Close | Back to landing CTA — *"Stop trusting. Start verifying. AgentProof, on Mantle."* End on the logo + URL. |
+| 8 | 2:05–2:20 | Close | Back to landing CTA — *"Stop trusting. Start verifying. Credora, on Mantle."* End on the logo + URL. |
 
 **Recording tips:** 1280×800 or 1920×1080, hide bookmarks bar, dark OS theme, smooth slow scrolls (the motion is part of the pitch), cursor visible for clicks. The count-up stats animate on load — let them finish before narrating a number.
 
@@ -121,11 +121,11 @@ Record on **https://agentproof-turing.vercel.app**. Suggested narration in *ital
 1. **Title** — logo, "Proof, not promises.", the orb, URL.
 2. **Problem** — the trust gap (claims vs proof). One stat or quote.
 3. **Insight** — trust should be a record, not a claim.
-4. **Solution** — AgentProof in one diagram (Passport · DecisionLogger · ReputationScore · Leaderboard).
+4. **Solution** — Credora in one diagram (Passport · DecisionLogger · ReputationScore · Leaderboard).
 5. **How it works** — the 4-step pipeline.
 6. **Product** — 2–3 real screens (dashboard, passport, proof modal). Screens > words.
 7. **Why on-chain / why Mantle** — permanent record, ERC-8004 identity, ecosystem fit.
-8. **Differentiation** — the "AI trading bot vs AgentProof" table (claims→proof, hidden risk→risk score, etc.).
+8. **Differentiation** — the "AI trading bot vs Credora" table (claims→proof, hidden risk→risk score, etc.).
 9. **Target users** — DeFi traders, agent builders, Mantle protocols.
 10. **Business model** — SaaS dashboard, API for agent track records, listing fees, premium analytics, protocol integrations.
 11. **Track fit** — Primary: AI Alpha & Data · Secondary: AI DevTools · Deployment Award.
@@ -137,13 +137,13 @@ Record on **https://agentproof-turing.vercel.app**. Suggested narration in *ital
 
 ## 10. Boilerplate copy (paste-ready)
 
-**Short description:** AgentProof is the verifiable reputation layer for AI agents on Mantle. It issues each agent an ERC-8004 identity and logs every decision on-chain, so users can rank and trust agents by provable track record instead of marketing claims.
+**Short description:** Credora is the verifiable reputation layer for AI agents on Mantle. It issues each agent an ERC-8004 identity and logs every decision on-chain, so users can rank and trust agents by provable track record instead of marketing claims.
 
 **Tags:** Mantle · ERC-8004 · AI agents · on-chain reputation · DeFi · verifiable AI · AI Alpha & Data
 
 **Links:**
-- Live demo: https://agentproof-turing.vercel.app
-- Repo: https://github.com/grandiv/agentproof
+- Live demo: https://credora-turing.vercel.app
+- Repo: https://github.com/grandiv/credora-fe
 
 ---
 

@@ -1,8 +1,8 @@
-# AgentProof — Frontend
+# Credora — Frontend
 
 **Verifiable AI Agent Reputation Layer on Mantle.** Proof, not promises.
 
-The landing page for AgentProof, built for The Turing Test Hackathon 2026 (Phase 2 — AI Awakening). Records, verifies and ranks the on-chain track record of AI trading & analytics agents on Mantle, so users can tell which agents actually perform — not just which ones market well.
+The landing page for Credora, built for The Turing Test Hackathon 2026 (Phase 2 — AI Awakening). Records, verifies and ranks the on-chain track record of AI trading & analytics agents on Mantle, so users can tell which agents actually perform — not just which ones market well.
 
 > The smart contracts (`AgentRegistry`, `DecisionLogger`, `ReputationScore`) live in a separate repository. This repo is the frontend only.
 

@@ -25,7 +25,7 @@ export function CTA() {
               href="/app"
               className="group inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-6 py-3.5 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_34px_-6px_rgba(210,96,26,0.7)]"
             >
-              Launch AgentProof
+              Launch Credora
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a

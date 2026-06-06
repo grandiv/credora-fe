@@ -9,7 +9,7 @@ export function Footer() {
             <div className="flex items-center gap-2.5">
               <Logo className="h-8 w-8" />
               <span className="font-display text-lg font-semibold tracking-tight">
-                Agent<span className="text-cyan">Proof</span>
+                Cred<span className="text-cyan">ora</span>
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-muted">
@@ -60,7 +60,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-slate-line/50 pt-6 sm:flex-row">
           <p className="font-mono text-[11px] text-faint">
-            © 2026 AgentProof · Built for The Turing Test Hackathon
+            © 2026 Credora · Built for The Turing Test Hackathon
           </p>
           <p className="font-mono text-[11px] text-faint">
             Made on{" "}

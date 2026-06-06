@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 export const alt =
-  "AgentProof — Verifiable AI Agent Reputation Layer on Mantle";
+  "Credora — Verifiable AI Agent Reputation Layer on Mantle";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -61,8 +61,8 @@ export default function OpengraphImage() {
               />
             </svg>
             <div style={{ display: "flex", fontSize: 34, fontWeight: 700 }}>
-              <span>Agent</span>
-              <span style={{ color: "#d2601a" }}>Proof</span>
+              <span>Cred</span>
+              <span style={{ color: "#d2601a" }}>ora</span>
             </div>
           </div>
           <div

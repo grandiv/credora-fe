@@ -87,7 +87,7 @@ export function Problem() {
               </div>
             </motion.div>
 
-            {/* AgentProof — raised, forward, overlapping */}
+            {/* Credora — raised, forward, overlapping */}
             <motion.div
               style={{ y: yGood }}
               className="relative z-10 mx-auto -mt-8 w-full max-w-md sm:-ml-2 sm:mr-auto sm:-mt-16 sm:rotate-[1.4deg]"
@@ -99,7 +99,7 @@ export function Problem() {
                     <Check className="h-4 w-4 text-cyan" />
                   </span>
                   <h3 className="font-display text-lg font-medium">
-                    Agent<span className="text-cyan">Proof</span>
+                    Cred<span className="text-cyan">ora</span>
                   </h3>
                 </div>
                 <ul className="space-y-2.5">
