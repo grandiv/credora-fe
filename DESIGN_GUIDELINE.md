@@ -104,13 +104,16 @@ Record on **https://credora-turing.vercel.app**. Suggested narration in *italics
 | # | Time | Screen | Action & narration |
 | --- | --- | --- | --- |
 | 1 | 0:00–0:15 | Landing hero | *"Every AI agent claims alpha. Almost none can prove it."* Let the orb morph; scroll slightly to show the live decision ticker. |
-| 2 | 0:15–0:35 | Landing — Problem | Scroll to the claims-vs-proof comparison. *"Credora closes the gap — every decision becomes an on-chain record."* |
-| 3 | 0:35–0:50 | Landing — How it works | Horizontal-scroll the 4-step pipeline (Passport → Decision → Log → Reputation). Pause on the `Decision.sol` struct card. |
-| 4 | 0:50–1:05 | Click **Launch App** → `/app` | *"This is the console."* Show the dashboard: leaderboard + live decision feed + stats. |
-| 5 | 1:05–1:20 | Dashboard | Click the **ROI** sort toggle — leaderboard reorders live. Click a **live decision** → the **Decision Proof** modal opens (confidence, risk, rationale, tx hash). *"Every metric is reconstructable from a Mantle tx hash."* |
-| 6 | 1:20–1:40 | Open an **Agent Passport** | Click an agent → show ERC-8004 identity, the reputation chart, and the full decision history. Open one history row → proof modal. |
-| 7 | 1:40–2:05 | **Register** flow | Walk Identity → Strategy → Review → **Mint passport**. Show the "minting on Mantle…" → "Passport minted" success with agent ID + tx hash. *"Any builder can give their agent a provable reputation in under a minute."* |
-| 8 | 2:05–2:20 | Close | Back to landing CTA — *"Stop trusting. Start verifying. Credora, on Mantle."* End on the logo + URL. |
+| 2 | 0:15–0:30 | Landing — Problem | Scroll to the claims-vs-proof comparison. *"Performance is self-reported and cherry-picked. There's no neutral ranking."* |
+| 3 | 0:30–0:45 | Landing — How it works | Horizontal-scroll the 4 steps: **Register → Join season → Log decision (before outcome) → Earn reputation.** Pause on the `Decision.sol` struct. |
+| 4 | 0:45–1:00 | Landing — Arena | Scroll to the season cards + Credora Score formula. *"Competition turns reputation into a market."* |
+| 5 | 1:00–1:10 | Click **Launch App** → `/app` | Dashboard: the live season banner, the standings, and a real-time decision feed. |
+| 6 | 1:10–1:25 | Dashboard | Toggle the **ROI** sort — leaderboard reorders. Click a **live decision** → **Decision Proof** modal (confidence, risk, rationale hash, data hash, tx hash). *"Reconstructable from a single Mantle tx."* |
+| 7 | 1:25–1:40 | **Seasons → Season detail** | Open the season. Show prize pool, scoring rules (30/25/20/15/10), reward split, standings. Click **Join season → MantaScout** → "✓ joined (tx logged)." |
+| 8 | 1:40–1:55 | **Register** an agent | Identity → Strategy (platform + market) → Review → **Mint passport** → success → "Join a season." |
+| 9 | 1:55–2:15 | **Log a decision** (`/app/submit`) | Click **⚡ Run demo agent** (auto-fills a call) → **Submit Proof on Mantle** → "Decision logged before the outcome." Back to dashboard → the decision appears as **NEW**. |
+| 10 | 2:15–2:30 | **Agent Passport** | ERC-8004 identity, badges, **Credora Score breakdown**, Accuracy + Win rate, decision history → proof. |
+| 11 | 2:30–2:40 | Close | *"Stop trusting. Start verifying. Credora — where agents earn credibility on-chain."* End on logo + URL. |
 
 **Recording tips:** 1280×800 or 1920×1080, hide bookmarks bar, dark OS theme, smooth slow scrolls (the motion is part of the pitch), cursor visible for clicks. The count-up stats animate on load — let them finish before narrating a number.
 

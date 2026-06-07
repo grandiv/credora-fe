@@ -10,6 +10,7 @@ import {
   FileLock2,
   LoaderCircle,
   Lock,
+  Sparkles,
   Wallet,
 } from "lucide-react";
 import {
@@ -17,18 +18,28 @@ import {
   WINDOW_LIST,
   AGENTS,
   activeSeason,
+  makeDecision,
   type Action,
   type Risk,
 } from "@/lib/agents";
 import { PageHeader } from "@/components/app/ui";
 import { useWallet } from "@/components/app/wallet";
+import { useSession } from "@/components/app/session";
 
 type Phase = "form" | "logging" | "done";
-const ACTIONS: Action[] = ["BUY", "SELL", "HOLD", "ALERT"];
+const ACTIONS: Action[] = ["BUY", "SELL", "HOLD"];
 const RISKS: Risk[] = ["Low", "Medium", "High"];
+
+const DEMO_REASONS = [
+  "Smart-wallet accumulation diverging from flat price action.",
+  "Momentum exhaustion as perp funding flipped negative into thin depth.",
+  "Pool depth normalising; carry beats rotating through the window.",
+  "Volume spike with rising TVL — informed inflow detected on-chain.",
+];
 
 export default function SubmitDecisionPage() {
   const { address, connect, connecting } = useWallet();
+  const { addDecision } = useSession();
   const season = activeSeason();
 
   const [phase, setPhase] = useState<Phase>("form");
@@ -39,9 +50,36 @@ export default function SubmitDecisionPage() {
   const [risk, setRisk] = useState<Risk>("Medium");
   const [window, setWindow] = useState(WINDOW_LIST[1]);
   const [reasoning, setReasoning] = useState("");
+  const [generated, setGenerated] = useState(false);
+
+  /* "Run demo agent" — auto-fills a realistic call (the AI moment) */
+  const runDemo = () => {
+    const a = AGENTS[Math.floor(Math.random() * AGENTS.length)];
+    const acts: Action[] = ["BUY", "SELL", "HOLD"];
+    setAgent(a.id);
+    setMarket(a.markets[0]);
+    setAction(acts[Math.floor(Math.random() * acts.length)]);
+    setConfidence(60 + Math.floor(Math.random() * 35));
+    setRisk(a.risk);
+    setWindow(WINDOW_LIST[Math.floor(Math.random() * WINDOW_LIST.length)]);
+    setReasoning(DEMO_REASONS[Math.floor(Math.random() * DEMO_REASONS.length)]);
+    setGenerated(true);
+  };
 
   const submit = () => {
     setPhase("logging");
+    const a = AGENTS.find((x) => x.id === agent) ?? AGENTS[0];
+    addDecision(
+      makeDecision({
+        agentId: a.id,
+        agent: a.name,
+        action,
+        market,
+        confidence,
+        risk,
+        window,
+      }),
+    );
     setTimeout(() => setPhase("done"), 1700);
   };
 
@@ -123,6 +161,27 @@ export default function SubmitDecisionPage() {
       </div>
 
       <div className="space-y-5 rounded-3xl border border-slate-line/60 bg-navy-deep/30 p-6 sm:p-7">
+        {/* run demo agent — auto-generates a realistic call */}
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-cyan/25 bg-cyan/[0.04] p-3.5">
+          <div className="min-w-0">
+            <div className="font-mono text-[12px] font-semibold text-ink">
+              Run a demo agent
+            </div>
+            <div className="font-mono text-[11px] text-faint">
+              {generated
+                ? "Generated a call — review and submit ↓"
+                : "Let an agent read the market and draft a decision."}
+            </div>
+          </div>
+          <button
+            onClick={runDemo}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-cyan/40 bg-cyan/10 px-3.5 py-2 font-mono text-[12px] text-cyan transition-colors hover:bg-cyan/15"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {generated ? "Regenerate" : "Run demo agent"}
+          </button>
+        </div>
+
         {/* agent */}
         <Field label="Agent">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

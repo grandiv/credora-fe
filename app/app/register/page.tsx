@@ -85,18 +85,21 @@ export default function RegisterPage() {
             ))}
           </div>
 
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <p className="mt-6 font-mono text-[12px] text-muted">
+            Next step → enter a season to start competing.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <Link
-              href="/app/agent/0001"
+              href="/app/seasons"
               className="flex-1 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_24px_-6px_rgba(210,96,26,0.7)]"
             >
-              View passport
+              Join a season
             </Link>
             <Link
-              href="/app"
+              href="/app/agent/0001"
               className="flex-1 rounded-xl border border-slate-line/70 px-4 py-3 text-sm font-semibold text-ink transition-colors hover:bg-white/[0.04]"
             >
-              Back to dashboard
+              View passport
             </Link>
           </div>
         </motion.div>

@@ -55,10 +55,8 @@ export function SectionTag({ children }: { children: ReactNode }) {
 
 const ACTION_STYLES: Record<Action, string> = {
   BUY: "text-cyan border-cyan/40 bg-cyan/10",
-  REBALANCE: "text-cyan border-cyan/40 bg-cyan/10",
   HOLD: "text-muted border-slate-line bg-white/5",
   SELL: "text-gold border-gold/40 bg-gold/10",
-  ALERT: "text-gold border-gold/40 bg-gold/10",
 };
 
 export function ActionBadge({ action }: { action: Action }) {

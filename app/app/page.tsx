@@ -28,6 +28,7 @@ import {
   StatCard,
 } from "@/components/app/ui";
 import { DecisionModal } from "@/components/app/DecisionModal";
+import { useSession } from "@/components/app/session";
 import { Counter } from "@/components/Counter";
 
 type SortKey = "credoraScore" | "roi" | "accuracy";
@@ -36,6 +37,9 @@ export default function DashboardPage() {
   const [sort, setSort] = useState<SortKey>("credoraScore");
   const [decision, setDecision] = useState<DecisionRow | null>(null);
   const season = activeSeason();
+  const { loggedDecisions } = useSession();
+  // session-logged decisions appear at the top of the live feed
+  const feed = [...loggedDecisions, ...LIVE_FEED];
 
   const ranked = useMemo(
     () => [...AGENTS].sort((a, b) => b[sort] - a[sort]),
@@ -111,24 +115,24 @@ export default function DashboardPage() {
       {/* stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Total agents"
+          label="Agents"
           value={<Counter to={NETWORK_STATS.totalAgents} />}
           accent
         />
         <StatCard
-          label="Verified decisions"
-          value={<Counter to={NETWORK_STATS.verifiedDecisions} />}
-          hint="logged before outcome"
+          label="Decisions logged"
+          value={<Counter to={NETWORK_STATS.decisionsLogged} />}
+          hint="on-chain, all-time"
+        />
+        <StatCard
+          label="Verified this season"
+          value={<Counter to={NETWORK_STATS.verifiedThisSeason} />}
+          hint="graded before outcome"
         />
         <StatCard
           label="Active season"
           value={<span className="text-base sm:text-lg">{season.name}</span>}
           hint={`ends in ${season.endsIn}`}
-        />
-        <StatCard
-          label="Proofs logged"
-          value={<Counter to={NETWORK_STATS.proofsLogged} />}
-          hint="on-chain tx"
         />
       </div>
 
@@ -195,7 +199,9 @@ export default function DashboardPage() {
                     <div className="font-mono text-sm text-ink">
                       {a.accuracy}%
                     </div>
-                    <div className="font-mono text-[10px] text-faint">acc</div>
+                    <div className="font-mono text-[10px] text-faint">
+                      acc · {a.winRate}% win
+                    </div>
                   </div>
                   <div className="w-16 text-right">
                     <div className="font-mono text-sm font-semibold text-cyan">
@@ -226,14 +232,18 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="max-h-[520px] divide-y divide-slate-line/40 overflow-y-auto">
-            {LIVE_FEED.map((d, i) => (
+            {feed.map((d, i) => {
+              const fresh = d.id.startsWith("live-");
+              return (
               <motion.button
                 key={d.id}
-                initial={{ opacity: 0, x: 8 }}
+                initial={{ opacity: 0, x: fresh ? -10 : 8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.03 }}
+                transition={{ delay: fresh ? 0 : 0.1 + i * 0.03 }}
                 onClick={() => setDecision(d)}
-                className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-cyan/[0.04]"
+                className={`flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-cyan/[0.04] ${
+                  fresh ? "bg-cyan/[0.06]" : ""
+                }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -241,6 +251,11 @@ export default function DashboardPage() {
                     <span className="truncate font-mono text-[13px] text-ink">
                       {d.market}
                     </span>
+                    {fresh && (
+                      <span className="rounded border border-cyan/40 bg-cyan/10 px-1 font-mono text-[9px] text-cyan">
+                        NEW
+                      </span>
+                    )}
                   </div>
                   <div className="mt-1 truncate font-mono text-[11px] text-faint">
                     {d.agent} · {d.ago}
@@ -265,7 +280,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </motion.button>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>

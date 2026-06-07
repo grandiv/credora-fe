@@ -1,5 +1,5 @@
 export type Risk = "Low" | "Medium" | "High";
-export type Action = "BUY" | "SELL" | "HOLD" | "ALERT" | "REBALANCE";
+export type Action = "BUY" | "SELL" | "HOLD";
 export type Platform = "DEX" | "CEX";
 
 export type ScoreBreakdown = {
@@ -20,14 +20,13 @@ export type Agent = {
   platform: Platform;
   markets: string[];
   /* performance */
-  accuracy: number; // % of predictions that resolved correct
-  winRate: number;
+  accuracy: number; // % of directional predictions that resolved correct
+  winRate: number; // % of decisions that closed in profit
   roi: number;
   risk: Risk;
   verifiedDecisions: number;
   credoraScore: number; // 0-100 weighted reputation
   scoreBreakdown: ScoreBreakdown;
-  decisions: number;
   badges: string[];
   /* last decision snapshot */
   lastAction: Action;
@@ -68,7 +67,6 @@ export const AGENTS: Agent[] = [
     verifiedDecisions: 18,
     credoraScore: 84.2,
     scoreBreakdown: { accuracy: 78, roi: 71, consistency: 82, riskMgmt: 66, verification: 90 },
-    decisions: 318,
     badges: ["Most Accurate", "Season 1 · Top 3"],
     lastAction: "BUY",
     lastAsset: "mETH",
@@ -80,7 +78,7 @@ export const AGENTS: Agent[] = [
     txHash: "0x4c8e7a21b9f0d3c5a6e1f7029d4b8c61aa30e2f4",
     result: "Profit",
     rationale:
-      "Detected unusual accumulation on the MNT/mETH pair — five smart wallets opened positions within 40 minutes while pool TVL rose 9.2% against flat price action. Divergence suggests informed inflow.",
+      "Detected unusual accumulation on the MNT/mETH pair — five smart wallets opened positions within 40 minutes while pool TVL rose 9.2% against flat price action. Divergence suggests informed inflow — predict up.",
   },
   {
     id: "0002",
@@ -98,7 +96,6 @@ export const AGENTS: Agent[] = [
     verifiedDecisions: 15,
     credoraScore: 81.0,
     scoreBreakdown: { accuracy: 74, roi: 52, consistency: 88, riskMgmt: 92, verification: 78 },
-    decisions: 204,
     badges: ["Best Risk-Adjusted"],
     lastAction: "HOLD",
     lastAsset: "USDY",
@@ -110,7 +107,7 @@ export const AGENTS: Agent[] = [
     txHash: "0xa1f3920c47de88b5103e6f4427cd91b0e7723d18",
     result: "Profit",
     rationale:
-      "USDY effective yield held within the 4.9–5.1% band with no collateral-attestation drift. Risk-adjusted carry remains superior to rotating — recommend hold and re-evaluate at next oracle epoch.",
+      "USDY effective yield held within the 4.9–5.1% band with no collateral-attestation drift. Risk-adjusted carry beats rotating — predict flat, hold the position through the next oracle epoch.",
   },
   {
     id: "0003",
@@ -128,7 +125,6 @@ export const AGENTS: Agent[] = [
     verifiedDecisions: 12,
     credoraScore: 76.4,
     scoreBreakdown: { accuracy: 69, roi: 95, consistency: 61, riskMgmt: 38, verification: 72 },
-    decisions: 489,
     badges: ["Best ROI"],
     lastAction: "SELL",
     lastAsset: "MNT",
@@ -140,7 +136,7 @@ export const AGENTS: Agent[] = [
     txHash: "0x77c20fe9aa13b884d5619c0e4f23ad77be81249c",
     result: "Pending",
     rationale:
-      "MNT pushed +6.3% into a thinning order book as perp funding flipped negative. Momentum exhaustion signal fired on the 4h timeframe — de-risk 40% of the position and trail the remainder.",
+      "MNT pushed +6.3% into a thinning order book as perp funding flipped negative. Momentum exhaustion fired on the 4h timeframe — predict down over the next window.",
   },
   {
     id: "0004",
@@ -158,9 +154,8 @@ export const AGENTS: Agent[] = [
     verifiedDecisions: 14,
     credoraScore: 73.5,
     scoreBreakdown: { accuracy: 71, roi: 63, consistency: 70, riskMgmt: 60, verification: 80 },
-    decisions: 271,
     badges: ["Most Consistent"],
-    lastAction: "ALERT",
+    lastAction: "HOLD",
     lastAsset: "FBTC",
     lastMarket: "FBTC/USDT",
     confidence: 83,
@@ -170,7 +165,7 @@ export const AGENTS: Agent[] = [
     txHash: "0x55da1c8b73f29104ccae6610b8f4d27a90e3318f",
     result: "Profit",
     rationale:
-      "FBTC pool depth dropped 31% in one block while a single wallet captured 64% of routed volume — concentration pattern consistent with a pre-position. Flagged for watchlist, no execution.",
+      "FBTC pool depth dropped 31% in one block while a single wallet captured 64% of routed volume — concentration pattern consistent with a pre-position. Predict range-bound; hold until depth normalises.",
   },
   {
     id: "0005",
@@ -188,9 +183,8 @@ export const AGENTS: Agent[] = [
     verifiedDecisions: 9,
     credoraScore: 70.1,
     scoreBreakdown: { accuracy: 66, roi: 58, consistency: 80, riskMgmt: 85, verification: 55 },
-    decisions: 156,
     badges: [],
-    lastAction: "REBALANCE",
+    lastAction: "BUY",
     lastAsset: "mETH",
     lastMarket: "mETH/USDT",
     confidence: 88,
@@ -200,7 +194,7 @@ export const AGENTS: Agent[] = [
     txHash: "0x2ef0aa45d918c7720b3361a0ef4c8d9173be20a6",
     result: "Profit",
     rationale:
-      "Portfolio drift exceeded the 5% band as mETH outperformed. Rebalanced toward target weights to lock realised gains and restore the conservative risk envelope.",
+      "Portfolio drift exceeded the 5% band as mETH outperformed. Predict continued relative strength — add to mETH toward target weight and lock realised gains.",
   },
 ];
 
@@ -209,9 +203,9 @@ export const TICKER: { agent: string; action: Action; market: string; conf: numb
     { agent: "MantaScout", action: "BUY", market: "mETH/USDT", conf: 78 },
     { agent: "RWA Guard", action: "HOLD", market: "USDY/USDT", conf: 91 },
     { agent: "ClawQuant", action: "SELL", market: "MNT/USDT", conf: 66 },
-    { agent: "FluxSeer", action: "ALERT", market: "FBTC/USDT", conf: 83 },
-    { agent: "MetaRebal", action: "REBALANCE", market: "mETH/USDT", conf: 88 },
-    { agent: "MantaScout", action: "ALERT", market: "MNT/USDT", conf: 72 },
+    { agent: "FluxSeer", action: "HOLD", market: "FBTC/USDT", conf: 83 },
+    { agent: "MetaRebal", action: "BUY", market: "mETH/USDT", conf: 88 },
+    { agent: "MantaScout", action: "SELL", market: "MNT/USDT", conf: 72 },
   ];
 
 /* ── Competition seasons (the AI Agent Arena) ── */
@@ -275,19 +269,21 @@ export function getSeason(id: string): Season | undefined {
   return SEASONS.find((s) => s.id === id);
 }
 
-/* ── Decision history rows — predictions logged BEFORE the outcome ── */
+/* ── Decision rows — directional predictions logged BEFORE the outcome ── */
 export type DecisionRow = {
   id: string;
   agentId: string;
   agent: string;
   seasonId: string;
   ago: string; // relative time label
-  action: Action;
+  action: Action; // BUY (up) / SELL (down) / HOLD (flat)
   market: string;
   entry: number;
   window: string; // prediction window, e.g. "24h"
   confidence: number;
   riskScore: number;
+  rationaleHash: string;
+  dataSnapshotHash: string;
   result: "Profit" | "Pending" | "Loss";
   pnl: number; // realised %, 0 when pending (outcome not settled)
   txHash: string;
@@ -302,12 +298,22 @@ const ENTRY: Record<string, number> = {
   "FBTC/USDT": 96400,
   "USDe/USDT": 1.0,
 };
-const ACTIONS: Action[] = ["BUY", "SELL", "HOLD", "ALERT", "REBALANCE"];
+const ACTIONS: Action[] = ["BUY", "SELL", "HOLD"];
 
 function hash(n: number) {
   // tiny deterministic pseudo-random so SSR and client agree
   const x = Math.sin(n * 99.13) * 43758.5453;
   return x - Math.floor(x);
+}
+
+function hex(seed: number, len: number) {
+  return (
+    "0x" +
+    Math.floor(hash(seed) * 1e16)
+      .toString(16)
+      .padStart(12, "0")
+      .slice(0, len)
+  );
 }
 
 function buildHistory(agent: Agent, count: number): DecisionRow[] {
@@ -350,6 +356,9 @@ function buildHistory(agent: Agent, count: number): DecisionRow[] {
       window: WINDOWS[Math.floor(hash(seed + i + 5) * WINDOWS.length)],
       confidence: 55 + Math.floor(hash(seed + i + 7) * 42),
       riskScore: 18 + Math.floor(hash(seed + i + 11) * 64),
+      rationaleHash:
+        i === 0 ? agent.rationaleHash : "bafkrei" + hex(seed + i + 21, 6).slice(2) + "…" + hex(seed + i + 31, 4).slice(2),
+      dataSnapshotHash: i === 0 ? agent.dataSnapshotHash : hex(seed + i + 41, 4) + "…" + hex(seed + i + 51, 4).slice(2),
       result,
       pnl: Math.round(pnl * 10) / 10,
       txHash:
@@ -406,11 +415,11 @@ export function getAgent(id: string): Agent | undefined {
   return AGENTS.find((a) => a.id === id);
 }
 
-/* network-wide stats for dashboard / landing */
+/* network-wide stats (consistent labels across hero + dashboard) */
 export const NETWORK_STATS = {
   totalAgents: AGENTS.length,
-  verifiedDecisions: AGENTS.reduce((s, a) => s + a.verifiedDecisions, 0),
-  proofsLogged: 1438,
+  decisionsLogged: 1438,
+  verifiedThisSeason: AGENTS.reduce((s, a) => s + a.verifiedDecisions, 0),
   avgAccuracy: Math.round(
     AGENTS.reduce((s, a) => s + a.accuracy, 0) / AGENTS.length,
   ),
@@ -427,3 +436,36 @@ export const STRATEGY_TYPES = [
   "Auto rebalancer",
   "Arbitrage",
 ];
+
+/** Build a decision row from a freshly-submitted/generated call (demo). */
+export function makeDecision(input: {
+  agentId: string;
+  agent: string;
+  action: Action;
+  market: string;
+  confidence: number;
+  risk: Risk;
+  window: string;
+}): DecisionRow {
+  const seed = Math.floor(Math.random() * 1e6);
+  const riskScore =
+    input.risk === "Low" ? 20 + Math.floor(hash(seed) * 20) : input.risk === "High" ? 60 + Math.floor(hash(seed) * 30) : 40 + Math.floor(hash(seed) * 20);
+  return {
+    id: `live-${seed}`,
+    agentId: input.agentId,
+    agent: input.agent,
+    seasonId: "s01",
+    ago: "just now",
+    action: input.action,
+    market: input.market,
+    entry: ENTRY[input.market] ?? 1.0,
+    window: input.window,
+    confidence: input.confidence,
+    riskScore,
+    rationaleHash: "bafkrei" + hex(seed + 1, 6).slice(2) + "…" + hex(seed + 2, 4).slice(2),
+    dataSnapshotHash: hex(seed + 3, 4) + "…" + hex(seed + 4, 4).slice(2),
+    result: "Pending",
+    pnl: 0,
+    txHash: "0x" + Math.floor(hash(seed + 5) * 1e16).toString(16).padStart(40, "0").slice(0, 40),
+  };
+}

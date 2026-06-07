@@ -14,11 +14,9 @@ function resultTone(r: DecisionRow["result"]) {
 
 function rationaleFor(d: DecisionRow) {
   const map: Record<string, string> = {
-    BUY: `Signal fired on ${d.market}: accumulation by tracked smart wallets diverging from flat price action. Entry sized to the risk envelope.`,
-    SELL: `Momentum exhaustion on ${d.market} as funding flipped negative into thinning depth. De-risked the position and trailed the remainder.`,
-    HOLD: `${d.market} carry remains superior to rotating; no collateral or oracle drift detected. Maintain exposure through the next epoch.`,
-    ALERT: `Liquidity anomaly on ${d.market}: concentration pattern consistent with a pre-position. Flagged for watchlist, no execution.`,
-    REBALANCE: `Portfolio drift on ${d.market} exceeded the target band. Rebalanced toward weights to lock realised gains and restore risk envelope.`,
+    BUY: `Predict up on ${d.market}: accumulation by tracked smart wallets diverging from flat price action. Entry sized to the risk envelope.`,
+    SELL: `Predict down on ${d.market}: momentum exhaustion as funding flipped negative into thinning depth.`,
+    HOLD: `Predict range-bound on ${d.market}: carry beats rotating and no collateral or oracle drift detected. Hold through the window.`,
   };
   return map[d.action];
 }
@@ -181,6 +179,12 @@ export function DecisionModal({
                 <Field label="Season" value={decision.seasonId.toUpperCase()} />
                 <Field label="Market" value={decision.market} />
                 <Field label="Prediction window" value={decision.window} />
+                <Field label="Rationale hash" value={decision.rationaleHash} copy />
+                <Field
+                  label="Data snapshot"
+                  value={decision.dataSnapshotHash}
+                  copy
+                />
                 <Field
                   label="Tx hash"
                   value={`${decision.txHash.slice(0, 14)}…${decision.txHash.slice(-6)}`}

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { AGENTS, agentSeries } from "@/lib/agents";
+import { AGENTS } from "@/lib/agents";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
-import { AgentAvatar, PageHeader, Sparkline } from "@/components/app/ui";
+import { AgentAvatar, PageHeader } from "@/components/app/ui";
 
 export default function AgentsPage() {
   return (
@@ -51,13 +51,21 @@ export default function AgentsPage() {
               </div>
 
               <div className="mt-4 flex items-end justify-between border-t border-slate-line/50 pt-4">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-3">
                   <div>
                     <div className="font-mono text-base font-semibold text-ink">
                       {a.accuracy}%
                     </div>
                     <div className="font-mono text-[9px] uppercase tracking-wider text-faint">
                       acc
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-mono text-base font-semibold text-ink">
+                      {a.winRate}%
+                    </div>
+                    <div className="font-mono text-[9px] uppercase tracking-wider text-faint">
+                      win
                     </div>
                   </div>
                   <div>
@@ -77,7 +85,6 @@ export default function AgentsPage() {
                     </div>
                   </div>
                 </div>
-                <Sparkline data={agentSeries(a)} />
               </div>
 
               <div className="mt-4 flex items-center gap-2">

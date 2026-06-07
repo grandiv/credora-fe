@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { WalletProvider } from "@/components/app/wallet";
+import { SessionProvider } from "@/components/app/session";
 import { AppShell } from "@/components/app/AppShell";
 
 export const metadata: Metadata = {
@@ -15,7 +16,9 @@ export default function AppLayout({
 }) {
   return (
     <WalletProvider>
-      <AppShell>{children}</AppShell>
+      <SessionProvider>
+        <AppShell>{children}</AppShell>
+      </SessionProvider>
     </WalletProvider>
   );
 }

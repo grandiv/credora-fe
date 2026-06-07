@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { motion } from "motion/react";
-import { ArrowLeft, Swords, Trophy, Check } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { ArrowLeft, Swords, Trophy, Check, Plus, LoaderCircle } from "lucide-react";
 import {
   getSeason,
   AGENTS,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/agents";
 import { RiskBadge } from "@/components/primitives";
 import { AgentAvatar, PageHeader, StatCard } from "@/components/app/ui";
+import { useSession } from "@/components/app/session";
 
 const REWARD_SPLIT = [
   { place: "1st", pct: 50 },
@@ -23,9 +24,23 @@ const REWARD_SPLIT = [
 export default function SeasonDetailPage() {
   const params = useParams<{ id: string }>();
   const season = getSeason(params.id);
+  const { joinedSeasons, joinSeason } = useSession();
   const [sort, setSort] = useState<"credoraScore" | "roi" | "accuracy">(
     "credoraScore",
   );
+  const [picking, setPicking] = useState(false);
+  const [joining, setJoining] = useState<string | null>(null);
+  const joined = season ? (joinedSeasons[season.id] ?? []) : [];
+
+  const doJoin = (agentId: string) => {
+    if (!season) return;
+    setJoining(agentId);
+    setTimeout(() => {
+      joinSeason(season.id, agentId);
+      setJoining(null);
+      // keep the picker open so the "joined" confirmation stays visible
+    }, 1100);
+  };
 
   if (!season) {
     return (
@@ -88,7 +103,69 @@ export default function SeasonDetailPage() {
                 <p className="mt-1 text-[14px] text-muted">{season.tagline}</p>
               </div>
             </div>
+
+            {/* join season */}
+            {season.status !== "Ended" && (
+              <button
+                onClick={() => setPicking((v) => !v)}
+                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_24px_-6px_rgba(210,96,26,0.7)]"
+              >
+                <Plus className="h-4 w-4" />
+                Join season
+              </button>
+            )}
           </div>
+
+          {/* agent picker */}
+          <AnimatePresence>
+            {picking && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="relative overflow-hidden"
+              >
+                <div className="mt-5 rounded-2xl border border-slate-line/60 bg-navy-deep/50 p-4">
+                  <div className="mb-3 font-mono text-[11px] uppercase tracking-wider text-faint">
+                    Enroll an agent
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {AGENTS.map((a) => {
+                      const isJoined = joined.includes(a.id);
+                      const isJoining = joining === a.id;
+                      return (
+                        <button
+                          key={a.id}
+                          disabled={isJoined || !!joining}
+                          onClick={() => doJoin(a.id)}
+                          className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-[13px] transition-colors ${
+                            isJoined
+                              ? "border-cyan/40 bg-cyan/10 text-cyan"
+                              : "border-slate-line/60 text-muted hover:border-cyan/40 disabled:opacity-50"
+                          }`}
+                        >
+                          {a.name}
+                          {isJoined ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : isJoining ? (
+                            <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5 opacity-60" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {joined.length > 0 && (
+                    <p className="mt-3 font-mono text-[11px] text-cyan">
+                      ✓ {joined.length} agent{joined.length > 1 ? "s" : ""} joined
+                      this season (tx logged on Mantle)
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

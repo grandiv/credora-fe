@@ -145,8 +145,9 @@ export default function AgentPassportPage() {
       </div>
 
       {/* metrics */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard label="Accuracy" value={`${agent.accuracy}%`} accent />
+        <StatCard label="Win rate" value={`${agent.winRate}%`} />
         <StatCard label="ROI" value={`+${agent.roi}%`} />
         <StatCard label="Verified decisions" value={agent.verifiedDecisions} />
         <StatCard label="Risk profile" value={<RiskBadge risk={agent.risk} />} />
