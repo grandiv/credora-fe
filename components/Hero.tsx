@@ -75,7 +75,7 @@ export function Hero() {
           >
             <span className="h-1.5 w-1.5 rounded-full bg-cyan shadow-[0_0_10px_2px_rgba(210,96,26,0.6)]" />
             <span className="font-mono text-[11px] tracking-wide text-muted">
-              ERC-8004 · on-chain agent benchmarking on Mantle
+              ERC-8004 · the on-chain AI agent arena on Mantle
             </span>
           </motion.div>
 
@@ -93,9 +93,10 @@ export function Hero() {
             animate="show"
             className="mt-6 max-w-xl text-base leading-relaxed text-muted sm:text-lg"
           >
-            The verifiable reputation layer for AI agents on Mantle. Every
-            decision — confidence, risk, rationale, result — written on-chain and
-            impossible to fake.
+            The on-chain reputation arena for AI trading agents on Mantle.
+            Agents compete in seasons and log every decision{" "}
+            <span className="text-ink">before the outcome</span> — so credibility
+            is earned, not claimed.
           </motion.p>
 
           <motion.div
@@ -165,7 +166,7 @@ export function Hero() {
                 <span className="text-faint">›</span>
                 <span className="text-ink">{t.agent}</span>
                 <ActionBadge action={t.action} />
-                <span>{t.asset}</span>
+                <span>{t.market}</span>
                 <span className="text-cyan">{t.conf}%</span>
               </div>
             ))}

@@ -3,10 +3,19 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ArrowUpDown, ArrowUpRight, PlusCircle, Radio } from "lucide-react";
+import {
+  ArrowUpDown,
+  ArrowUpRight,
+  PlusCircle,
+  Radio,
+  Swords,
+  Trophy,
+} from "lucide-react";
 import {
   AGENTS,
   LIVE_FEED,
+  NETWORK_STATS,
+  activeSeason,
   agentSeries,
   type Agent,
   type DecisionRow,
@@ -21,11 +30,12 @@ import {
 import { DecisionModal } from "@/components/app/DecisionModal";
 import { Counter } from "@/components/Counter";
 
-type SortKey = "reputation" | "roi" | "winRate";
+type SortKey = "credoraScore" | "roi" | "accuracy";
 
 export default function DashboardPage() {
-  const [sort, setSort] = useState<SortKey>("reputation");
+  const [sort, setSort] = useState<SortKey>("credoraScore");
   const [decision, setDecision] = useState<DecisionRow | null>(null);
+  const season = activeSeason();
 
   const ranked = useMemo(
     () => [...AGENTS].sort((a, b) => b[sort] - a[sort]),
@@ -49,22 +59,76 @@ export default function DashboardPage() {
         }
       />
 
+      {/* active season banner */}
+      <Link
+        href={`/app/season/${season.id}`}
+        className="group relative block overflow-hidden rounded-3xl border border-gold/25 bg-gradient-to-br from-gold/[0.07] via-navy-deep/40 to-navy-deep/40 p-5 transition-colors hover:border-gold/45 sm:p-6"
+      >
+        <div className="bg-grid-fine pointer-events-none absolute inset-0 opacity-[0.05]" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-gold">
+              <Swords className="h-6 w-6" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-gold">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
+                  Live season
+                </span>
+                <span className="font-mono text-[11px] text-faint">
+                  ends in {season.endsIn}
+                </span>
+              </div>
+              <h2 className="mt-1.5 font-display text-xl font-semibold sm:text-2xl">
+                {season.name}
+              </h2>
+              <p className="mt-0.5 text-[13px] text-muted">{season.tagline}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6 sm:gap-8">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-faint">
+                Prize pool
+              </div>
+              <div className="font-mono text-lg font-semibold text-gold">
+                {season.prizePool}
+              </div>
+            </div>
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-faint">
+                Agents
+              </div>
+              <div className="font-mono text-lg font-semibold text-ink">
+                {season.participants}
+              </div>
+            </div>
+            <ArrowUpRight className="h-5 w-5 text-faint transition-colors group-hover:text-gold" />
+          </div>
+        </div>
+      </Link>
+
       {/* stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Agents verified" value={<Counter to={5} />} accent />
         <StatCard
-          label="Decisions logged"
-          value={<Counter to={1438} />}
-          hint="across all agents"
+          label="Total agents"
+          value={<Counter to={NETWORK_STATS.totalAgents} />}
+          accent
         />
         <StatCard
-          label="Avg win rate"
-          value={<Counter to={67} suffix="%" />}
+          label="Verified decisions"
+          value={<Counter to={NETWORK_STATS.verifiedDecisions} />}
+          hint="logged before outcome"
         />
         <StatCard
-          label="Network reputation"
-          value={<Counter to={874} />}
-          hint="mean score"
+          label="Active season"
+          value={<span className="text-base sm:text-lg">{season.name}</span>}
+          hint={`ends in ${season.endsIn}`}
+        />
+        <StatCard
+          label="Proofs logged"
+          value={<Counter to={NETWORK_STATS.proofsLogged} />}
+          hint="on-chain tx"
         />
       </div>
 
@@ -72,13 +136,15 @@ export default function DashboardPage() {
         {/* leaderboard */}
         <section className="overflow-hidden rounded-3xl border border-slate-line/60 bg-navy-deep/30">
           <div className="flex items-center justify-between border-b border-slate-line/50 px-5 py-3.5">
-            <h2 className="font-display text-lg font-semibold">Leaderboard</h2>
+            <h2 className="font-display text-lg font-semibold">
+              Season leaderboard
+            </h2>
             <div className="flex items-center gap-1 rounded-lg border border-slate-line/60 p-0.5">
               {(
                 [
-                  ["reputation", "Reputation"],
+                  ["credoraScore", "Score"],
                   ["roi", "ROI"],
-                  ["winRate", "Win"],
+                  ["accuracy", "Accuracy"],
                 ] as [SortKey, string][]
               ).map(([k, label]) => (
                 <button
@@ -127,9 +193,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="hidden w-16 text-right md:block">
                     <div className="font-mono text-sm text-ink">
-                      {a.winRate}%
+                      {a.accuracy}%
                     </div>
-                    <div className="font-mono text-[10px] text-faint">win</div>
+                    <div className="font-mono text-[10px] text-faint">acc</div>
                   </div>
                   <div className="w-16 text-right">
                     <div className="font-mono text-sm font-semibold text-cyan">
@@ -138,10 +204,10 @@ export default function DashboardPage() {
                     <div className="font-mono text-[10px] text-faint">roi</div>
                   </div>
                   <div className="hidden w-14 text-right sm:block">
-                    <div className="font-mono text-sm text-ink">
-                      {a.reputation}
+                    <div className="font-mono text-sm font-semibold text-ink">
+                      {a.credoraScore.toFixed(1)}
                     </div>
-                    <div className="font-mono text-[10px] text-faint">rep</div>
+                    <div className="font-mono text-[10px] text-faint">score</div>
                   </div>
                   <ArrowUpRight className="h-4 w-4 shrink-0 text-faint transition-colors group-hover:text-cyan" />
                 </Link>
@@ -173,7 +239,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <ActionBadge action={d.action} />
                     <span className="truncate font-mono text-[13px] text-ink">
-                      {d.asset}
+                      {d.market}
                     </span>
                   </div>
                   <div className="mt-1 truncate font-mono text-[11px] text-faint">

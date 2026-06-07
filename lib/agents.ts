@@ -1,5 +1,14 @@
 export type Risk = "Low" | "Medium" | "High";
 export type Action = "BUY" | "SELL" | "HOLD" | "ALERT" | "REBALANCE";
+export type Platform = "DEX" | "CEX";
+
+export type ScoreBreakdown = {
+  accuracy: number; // 0-100 component scores
+  roi: number;
+  consistency: number;
+  riskMgmt: number;
+  verification: number;
+};
 
 export type Agent = {
   id: string;
@@ -8,13 +17,22 @@ export type Agent = {
   handle: string;
   strategy: string;
   kind: string;
+  platform: Platform;
+  markets: string[];
+  /* performance */
+  accuracy: number; // % of predictions that resolved correct
   winRate: number;
   roi: number;
   risk: Risk;
-  reputation: number;
+  verifiedDecisions: number;
+  credoraScore: number; // 0-100 weighted reputation
+  scoreBreakdown: ScoreBreakdown;
   decisions: number;
+  badges: string[];
+  /* last decision snapshot */
   lastAction: Action;
   lastAsset: string;
+  lastMarket: string;
   confidence: number;
   riskScore: number;
   rationaleHash: string;
@@ -24,6 +42,15 @@ export type Agent = {
   rationale: string;
 };
 
+/* ── Credora Score — transparent, weighted (not "most profit wins") ── */
+export const SCORE_WEIGHTS = [
+  { key: "Accuracy", weight: 30, hint: "How often predictions resolve correct" },
+  { key: "ROI", weight: 25, hint: "Return from the agent's decisions" },
+  { key: "Consistency", weight: 20, hint: "Stable, not a one-time win" },
+  { key: "Risk Management", weight: 15, hint: "Penalty for excessive drawdown" },
+  { key: "Verified Decisions", weight: 10, hint: "Volume of provable on-chain calls" },
+] as const;
+
 export const AGENTS: Agent[] = [
   {
     id: "0001",
@@ -32,13 +59,20 @@ export const AGENTS: Agent[] = [
     handle: "manta.scout",
     strategy: "Smart-money alert",
     kind: "Alpha / Anomaly",
+    platform: "DEX",
+    markets: ["MNT/USDT", "mETH/USDT"],
+    accuracy: 78,
     winRate: 68,
     roi: 12.4,
     risk: "Medium",
-    reputation: 942,
+    verifiedDecisions: 18,
+    credoraScore: 84.2,
+    scoreBreakdown: { accuracy: 78, roi: 71, consistency: 82, riskMgmt: 66, verification: 90 },
     decisions: 318,
+    badges: ["Most Accurate", "Season 1 · Top 3"],
     lastAction: "BUY",
     lastAsset: "mETH",
+    lastMarket: "mETH/USDT",
     confidence: 78,
     riskScore: 54,
     rationaleHash: "bafkreid7h2…q4m9",
@@ -55,13 +89,20 @@ export const AGENTS: Agent[] = [
     handle: "rwa.guard",
     strategy: "RWA yield monitor",
     kind: "RWA / Risk",
+    platform: "DEX",
+    markets: ["USDY/USDT", "mETH/USDT"],
+    accuracy: 74,
     winRate: 74,
     roi: 6.1,
     risk: "Low",
-    reputation: 911,
+    verifiedDecisions: 15,
+    credoraScore: 81.0,
+    scoreBreakdown: { accuracy: 74, roi: 52, consistency: 88, riskMgmt: 92, verification: 78 },
     decisions: 204,
+    badges: ["Best Risk-Adjusted"],
     lastAction: "HOLD",
     lastAsset: "USDY",
+    lastMarket: "USDY/USDT",
     confidence: 91,
     riskScore: 22,
     rationaleHash: "bafkreifa0c…2x7p",
@@ -76,15 +117,22 @@ export const AGENTS: Agent[] = [
     rank: 3,
     name: "ClawQuant",
     handle: "claw.quant",
-    strategy: "Momentum trading",
+    strategy: "Momentum signal",
     kind: "Trading / Strategy",
+    platform: "DEX",
+    markets: ["MNT/USDT", "ETH/USDT"],
+    accuracy: 69,
     winRate: 61,
     roi: 18.2,
     risk: "High",
-    reputation: 877,
+    verifiedDecisions: 12,
+    credoraScore: 76.4,
+    scoreBreakdown: { accuracy: 69, roi: 95, consistency: 61, riskMgmt: 38, verification: 72 },
     decisions: 489,
+    badges: ["Best ROI"],
     lastAction: "SELL",
     lastAsset: "MNT",
+    lastMarket: "MNT/USDT",
     confidence: 66,
     riskScore: 71,
     rationaleHash: "bafkreih93b…lk0d",
@@ -101,13 +149,20 @@ export const AGENTS: Agent[] = [
     handle: "flux.seer",
     strategy: "Liquidity anomaly",
     kind: "Alpha / Data",
+    platform: "DEX",
+    markets: ["FBTC/USDT", "MNT/USDT"],
+    accuracy: 71,
     winRate: 70,
     roi: 9.7,
     risk: "Medium",
-    reputation: 840,
+    verifiedDecisions: 14,
+    credoraScore: 73.5,
+    scoreBreakdown: { accuracy: 71, roi: 63, consistency: 70, riskMgmt: 60, verification: 80 },
     decisions: 271,
+    badges: ["Most Consistent"],
     lastAction: "ALERT",
     lastAsset: "FBTC",
+    lastMarket: "FBTC/USDT",
     confidence: 83,
     riskScore: 48,
     rationaleHash: "bafkreig22a…9wq1",
@@ -124,13 +179,20 @@ export const AGENTS: Agent[] = [
     handle: "meta.rebal",
     strategy: "Auto rebalancer",
     kind: "Portfolio / RWA",
+    platform: "DEX",
+    markets: ["mETH/USDT", "USDe/USDT"],
+    accuracy: 66,
     winRate: 65,
     roi: 7.8,
     risk: "Low",
-    reputation: 802,
+    verifiedDecisions: 9,
+    credoraScore: 70.1,
+    scoreBreakdown: { accuracy: 66, roi: 58, consistency: 80, riskMgmt: 85, verification: 55 },
     decisions: 156,
+    badges: [],
     lastAction: "REBALANCE",
     lastAsset: "mETH",
+    lastMarket: "mETH/USDT",
     confidence: 88,
     riskScore: 30,
     rationaleHash: "bafkreib71d…u3kx",
@@ -142,32 +204,104 @@ export const AGENTS: Agent[] = [
   },
 ];
 
-export const TICKER: { agent: string; action: Action; asset: string; conf: number }[] =
+export const TICKER: { agent: string; action: Action; market: string; conf: number }[] =
   [
-    { agent: "MantaScout", action: "BUY", asset: "mETH", conf: 78 },
-    { agent: "RWA Guard", action: "HOLD", asset: "USDY", conf: 91 },
-    { agent: "ClawQuant", action: "SELL", asset: "MNT", conf: 66 },
-    { agent: "FluxSeer", action: "ALERT", asset: "FBTC", conf: 83 },
-    { agent: "MetaRebal", action: "REBALANCE", asset: "mETH", conf: 88 },
-    { agent: "MantaScout", action: "ALERT", asset: "MNT", conf: 72 },
+    { agent: "MantaScout", action: "BUY", market: "mETH/USDT", conf: 78 },
+    { agent: "RWA Guard", action: "HOLD", market: "USDY/USDT", conf: 91 },
+    { agent: "ClawQuant", action: "SELL", market: "MNT/USDT", conf: 66 },
+    { agent: "FluxSeer", action: "ALERT", market: "FBTC/USDT", conf: 83 },
+    { agent: "MetaRebal", action: "REBALANCE", market: "mETH/USDT", conf: 88 },
+    { agent: "MantaScout", action: "ALERT", market: "MNT/USDT", conf: 72 },
   ];
 
-/* ── Decision history rows (for agent passport + live feed) ── */
+/* ── Competition seasons (the AI Agent Arena) ── */
+export type SeasonStatus = "Live" | "Upcoming" | "Ended";
+export type Season = {
+  id: string;
+  name: string;
+  tagline: string;
+  status: SeasonStatus;
+  prizePool: string;
+  startsIn?: string;
+  endsIn?: string;
+  duration: string;
+  participants: number;
+  categories: string[];
+  decisionsLogged: number;
+};
+
+export const SEASONS: Season[] = [
+  {
+    id: "s01",
+    name: "Mantle AI Agent Arena",
+    tagline: "The flagship season — every market, every strategy.",
+    status: "Live",
+    prizePool: "25,000 MNT",
+    endsIn: "4d 11h",
+    duration: "7-day season",
+    participants: 5,
+    categories: ["Most Accurate", "Best ROI", "Best Risk-Adjusted", "Most Consistent"],
+    decisionsLogged: 1438,
+  },
+  {
+    id: "s02",
+    name: "Smart Money Detection Challenge",
+    tagline: "Catch informed flow before the candle prints.",
+    status: "Upcoming",
+    prizePool: "10,000 MNT",
+    startsIn: "5d",
+    duration: "Weekly season",
+    participants: 3,
+    categories: ["Most Accurate", "Best Risk-Adjusted"],
+    decisionsLogged: 0,
+  },
+  {
+    id: "s00",
+    name: "Weekly Alpha Challenge · S0",
+    tagline: "The opening season that started the arena.",
+    status: "Ended",
+    prizePool: "8,000 MNT",
+    duration: "Weekly season",
+    participants: 4,
+    categories: ["Best ROI", "Most Consistent"],
+    decisionsLogged: 612,
+  },
+];
+
+export function activeSeason(): Season {
+  return SEASONS.find((s) => s.status === "Live") ?? SEASONS[0];
+}
+export function getSeason(id: string): Season | undefined {
+  return SEASONS.find((s) => s.id === id);
+}
+
+/* ── Decision history rows — predictions logged BEFORE the outcome ── */
 export type DecisionRow = {
   id: string;
   agentId: string;
   agent: string;
+  seasonId: string;
   ago: string; // relative time label
   action: Action;
-  asset: string;
+  market: string;
+  entry: number;
+  window: string; // prediction window, e.g. "24h"
   confidence: number;
   riskScore: number;
   result: "Profit" | "Pending" | "Loss";
-  pnl: number; // realised %, 0 when pending
+  pnl: number; // realised %, 0 when pending (outcome not settled)
   txHash: string;
 };
 
-const ASSETS = ["mETH", "USDY", "MNT", "FBTC", "USDe"];
+const MARKETS = ["MNT/USDT", "mETH/USDT", "ETH/USDT", "FBTC/USDT", "USDe/USDT"];
+const WINDOWS = ["4h", "24h", "7d"];
+const ENTRY: Record<string, number> = {
+  "MNT/USDT": 1.25,
+  "mETH/USDT": 3580,
+  "ETH/USDT": 3120,
+  "FBTC/USDT": 96400,
+  "USDe/USDT": 1.0,
+};
 const ACTIONS: Action[] = ["BUY", "SELL", "HOLD", "ALERT", "REBALANCE"];
 
 function hash(n: number) {
@@ -196,10 +330,12 @@ function buildHistory(agent: Agent, count: number): DecisionRow[] {
         : result === "Loss"
           ? -(1 + r2 * 6)
           : 1 + r2 * 9;
+    const market = i === 0 ? agent.lastMarket : MARKETS[Math.floor(r2 * MARKETS.length)];
     rows.push({
       id: `${agent.id}-${String(i).padStart(3, "0")}`,
       agentId: agent.id,
       agent: agent.name,
+      seasonId: "s01",
       ago:
         i === 0
           ? "just now"
@@ -209,7 +345,9 @@ function buildHistory(agent: Agent, count: number): DecisionRow[] {
               ? `${i - 2}h ago`
               : `${i - 7}d ago`,
       action: i === 0 ? agent.lastAction : ACTIONS[Math.floor(r * ACTIONS.length)],
-      asset: i === 0 ? agent.lastAsset : ASSETS[Math.floor(r2 * ASSETS.length)],
+      market,
+      entry: ENTRY[market] ?? 1.0,
+      window: WINDOWS[Math.floor(hash(seed + i + 5) * WINDOWS.length)],
       confidence: 55 + Math.floor(hash(seed + i + 7) * 42),
       riskScore: 18 + Math.floor(hash(seed + i + 11) * 64),
       result,
@@ -230,17 +368,17 @@ export function agentHistory(agent: Agent): DecisionRow[] {
   return buildHistory(agent, 14);
 }
 
-/** A reputation trend series for the passport chart (24 points). */
+/** Credora Score trend series for the passport chart (24 points, 0-100). */
 export function agentSeries(agent: Agent): number[] {
   const seed = parseInt(agent.id, 10) * 13;
   const pts: number[] = [];
-  let v = agent.reputation - 120;
+  let v = agent.credoraScore - 14;
   for (let i = 0; i < 24; i++) {
-    v += (hash(seed + i) - 0.42) * 26;
-    v = Math.max(620, Math.min(980, v));
-    pts.push(Math.round(v));
+    v += (hash(seed + i) - 0.42) * 4.2;
+    v = Math.max(55, Math.min(95, v));
+    pts.push(Math.round(v * 10) / 10);
   }
-  pts[pts.length - 1] = agent.reputation;
+  pts[pts.length - 1] = agent.credoraScore;
   return pts;
 }
 
@@ -251,7 +389,6 @@ export const LIVE_FEED: DecisionRow[] = (() => {
   for (let i = 0; i < 4; i++) {
     for (const rows of per) if (rows[i]) feed.push(rows[i]);
   }
-  // assign cascading "ago" labels so the feed reads newest-first
   return feed.slice(0, 18).map((d, i) => ({
     ...d,
     ago:
@@ -269,11 +406,23 @@ export function getAgent(id: string): Agent | undefined {
   return AGENTS.find((a) => a.id === id);
 }
 
-export const ASSET_LIST = ASSETS;
+/* network-wide stats for dashboard / landing */
+export const NETWORK_STATS = {
+  totalAgents: AGENTS.length,
+  verifiedDecisions: AGENTS.reduce((s, a) => s + a.verifiedDecisions, 0),
+  proofsLogged: 1438,
+  avgAccuracy: Math.round(
+    AGENTS.reduce((s, a) => s + a.accuracy, 0) / AGENTS.length,
+  ),
+};
+
+export const MARKET_LIST = MARKETS;
+export const WINDOW_LIST = WINDOWS;
+export const PLATFORMS: Platform[] = ["DEX", "CEX"];
 export const STRATEGY_TYPES = [
   "Smart-money alert",
   "Anomaly detection",
-  "Momentum trading",
+  "Momentum signal",
   "RWA yield monitor",
   "Auto rebalancer",
   "Arbitrage",

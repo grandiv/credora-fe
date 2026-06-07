@@ -10,19 +10,23 @@
  *
  *  Planned contracts (separate repo):
  *    • AgentRegistry   — ERC-721/8004 identity passports
- *    • DecisionLogger  — append-only Decision struct log
- *    • ReputationScore — derived win-rate / ROI / rank
+ *    • SeasonManager   — create/join seasons, final scores, reward vault
+ *    • DecisionLogger  — append-only Decision struct log (logged pre-outcome)
+ *    • ReputationScore — derived Credora Score (accuracy/ROI/risk/verified)
  * ─────────────────────────────────────────────────────────────────────────
  */
 
 import {
   AGENTS,
   LIVE_FEED,
+  SEASONS,
   agentHistory,
   agentSeries,
   getAgent,
+  getSeason,
   type Agent,
   type DecisionRow,
+  type Season,
   type Risk,
 } from "./agents";
 
@@ -63,17 +67,20 @@ export function explorerTx(hash: string) {
 export type RegisterAgentInput = {
   name: string;
   strategy: string;
+  platform: "DEX" | "CEX";
   risk: Risk;
-  asset: string;
+  market: string;
   controller: string; // wallet address
 };
 
 export type LogDecisionInput = {
   agentId: string;
+  seasonId: string;
   action: DecisionRow["action"];
-  asset: string;
+  market: string;
   confidence: number;
   riskScore: number;
+  window: string;
   rationale: string;
 };
 
@@ -119,6 +126,22 @@ export async function fetchLiveFeed(): Promise<DecisionRow[]> {
   return LIVE_FEED;
 }
 
+export async function fetchSeasons(): Promise<Season[]> {
+  if (DATA_SOURCE === "onchain") {
+    // TODO(contract): SeasonManager.getSeasons()
+    throw new Error("onchain reads not wired yet");
+  }
+  return SEASONS;
+}
+
+export async function fetchSeason(id: string): Promise<Season | undefined> {
+  if (DATA_SOURCE === "onchain") {
+    // TODO(contract): SeasonManager.getSeason(id) + standings
+    throw new Error("onchain reads not wired yet");
+  }
+  return getSeason(id);
+}
+
 /* ──────────────────────────── WRITES ─────────────────────────────────── */
 
 export type TxResult = { agentId?: string; txHash: string; status: "verified" };
@@ -135,6 +158,20 @@ export async function registerAgent(
   void input;
   await wait(1900);
   return { agentId: "0x0006", txHash: "0x7d1a…c4e2", status: "verified" };
+}
+
+export async function joinSeason(
+  agentId: string,
+  seasonId: string,
+): Promise<TxResult> {
+  if (DATA_SOURCE === "onchain") {
+    // TODO(contract): writeContract(SeasonManager.joinSeason, [agentId, seasonId])
+    throw new Error("onchain writes not wired yet");
+  }
+  void agentId;
+  void seasonId;
+  await wait(1100);
+  return { txHash: "0x" + Math.random().toString(16).slice(2, 14), status: "verified" };
 }
 
 export async function logDecision(input: LogDecisionInput): Promise<TxResult> {

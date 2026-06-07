@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { motion } from "motion/react";
 import {
   ArrowLeft,
+  Award,
   BadgeCheck,
   Copy,
   Fingerprint,
@@ -15,6 +16,7 @@ import {
   getAgent,
   agentHistory,
   agentSeries,
+  SCORE_WEIGHTS,
   type DecisionRow,
 } from "@/lib/agents";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
@@ -78,26 +80,42 @@ export default function AgentPassportPage() {
                 <div className="mt-1 font-mono text-[12px] text-muted">
                   @{agent.handle} · {agent.kind}
                 </div>
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <ActionBadge action={agent.lastAction} />
                   <span className="font-mono text-[12px] text-muted">
-                    last on {agent.lastAsset}
+                    last on {agent.lastMarket}
+                  </span>
+                  <span className="rounded-md border border-slate-line/70 px-2 py-0.5 font-mono text-[10px] text-faint">
+                    {agent.platform}
                   </span>
                 </div>
+                {agent.badges.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {agent.badges.map((b) => (
+                      <span
+                        key={b}
+                        className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-mono text-[10px] text-gold"
+                      >
+                        <Award className="h-3 w-3" />
+                        {b}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-cyan/25 bg-cyan/[0.05] px-5 py-3 text-center">
+            <div className="rounded-2xl border border-gold/25 bg-gold/[0.05] px-5 py-3 text-center">
               <div className="font-mono text-[10px] uppercase tracking-wider text-faint">
-                Reputation
+                Credora Score
               </div>
-              <div className="font-mono text-3xl font-semibold text-cyan">
-                {agent.reputation}
+              <div className="font-mono text-3xl font-semibold text-gold">
+                {agent.credoraScore.toFixed(1)}
               </div>
-              <div className="flex items-center justify-center gap-1 font-mono text-[11px] text-cyan">
+              <div className="flex items-center justify-center gap-1 font-mono text-[11px] text-gold">
                 <TrendingUp className="h-3 w-3" />
                 {trend >= 0 ? "+" : ""}
-                {trend} (30d)
+                {trend.toFixed(1)} (30d)
               </div>
             </div>
           </div>
@@ -128,22 +146,66 @@ export default function AgentPassportPage() {
 
       {/* metrics */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="Win rate" value={`${agent.winRate}%`} />
-        <StatCard label="ROI" value={`+${agent.roi}%`} accent />
-        <StatCard label="Decisions" value={agent.decisions} />
+        <StatCard label="Accuracy" value={`${agent.accuracy}%`} accent />
+        <StatCard label="ROI" value={`+${agent.roi}%`} />
+        <StatCard label="Verified decisions" value={agent.verifiedDecisions} />
         <StatCard label="Risk profile" value={<RiskBadge risk={agent.risk} />} />
       </div>
 
-      {/* perf chart */}
-      <section className="rounded-3xl border border-slate-line/60 bg-navy-deep/30 p-5 sm:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">
-            Reputation trend
-          </h2>
-          <span className="font-mono text-[11px] text-faint">last 30 days</span>
-        </div>
-        <PerfChart data={series} />
-      </section>
+      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        {/* perf chart */}
+        <section className="rounded-3xl border border-slate-line/60 bg-navy-deep/30 p-5 sm:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold">
+              Credora Score trend
+            </h2>
+            <span className="font-mono text-[11px] text-faint">last 30 days</span>
+          </div>
+          <PerfChart data={series} />
+        </section>
+
+        {/* score breakdown */}
+        <section className="rounded-3xl border border-slate-line/60 bg-navy-deep/30 p-5 sm:p-6">
+          <h2 className="font-display text-lg font-semibold">Score breakdown</h2>
+          <p className="mt-1 font-mono text-[11px] text-faint">
+            weighted — reliability over raw profit
+          </p>
+          <div className="mt-4 space-y-3">
+            {SCORE_WEIGHTS.map((w) => {
+              const key = (
+                {
+                  Accuracy: "accuracy",
+                  ROI: "roi",
+                  Consistency: "consistency",
+                  "Risk Management": "riskMgmt",
+                  "Verified Decisions": "verification",
+                } as const
+              )[w.key];
+              const val = agent.scoreBreakdown[key];
+              return (
+                <div key={w.key}>
+                  <div className="mb-1 flex items-center justify-between font-mono text-[11px]">
+                    <span className="text-muted">
+                      {w.key}{" "}
+                      <span className="text-faint">· {w.weight}%</span>
+                    </span>
+                    <span className="text-ink">{val}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-line/50">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan to-gold"
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${val}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
 
       {/* decision history */}
       <section className="overflow-hidden rounded-3xl border border-slate-line/60 bg-navy-deep/30">
@@ -178,7 +240,7 @@ export default function AgentPassportPage() {
             >
               <div className="flex items-center gap-2">
                 <ActionBadge action={d.action} />
-                <span className="font-mono text-[13px] text-ink">{d.asset}</span>
+                <span className="font-mono text-[13px] text-ink">{d.market}</span>
               </div>
               <div className="hidden font-mono text-[13px] text-cyan sm:block">
                 {d.confidence}%

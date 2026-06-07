@@ -8,6 +8,7 @@ const NODES = [
   { id: "top", label: "Overview" },
   { id: "problem", label: "The gap" },
   { id: "how", label: "How it works" },
+  { id: "arena", label: "Arena" },
   { id: "agents", label: "Leaderboard" },
   { id: "tracks", label: "Tracks" },
   { id: "cta", label: "Verify" },

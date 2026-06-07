@@ -54,10 +54,10 @@ export default function AgentsPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <div className="font-mono text-base font-semibold text-ink">
-                      {a.winRate}%
+                      {a.accuracy}%
                     </div>
                     <div className="font-mono text-[9px] uppercase tracking-wider text-faint">
-                      win
+                      acc
                     </div>
                   </div>
                   <div>
@@ -69,11 +69,11 @@ export default function AgentsPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="font-mono text-base font-semibold text-ink">
-                      {a.reputation}
+                    <div className="font-mono text-base font-semibold text-gold">
+                      {a.credoraScore.toFixed(1)}
                     </div>
                     <div className="font-mono text-[9px] uppercase tracking-wider text-faint">
-                      rep
+                      score
                     </div>
                   </div>
                 </div>
@@ -84,7 +84,7 @@ export default function AgentsPage() {
                 <span className="font-mono text-[10px] text-faint">last</span>
                 <ActionBadge action={a.lastAction} />
                 <span className="font-mono text-[11px] text-muted">
-                  {a.lastAsset}
+                  {a.lastMarket}
                 </span>
               </div>
             </Link>

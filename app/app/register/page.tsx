@@ -13,7 +13,13 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
-import { STRATEGY_TYPES, ASSET_LIST, type Risk } from "@/lib/agents";
+import {
+  STRATEGY_TYPES,
+  MARKET_LIST,
+  PLATFORMS,
+  type Platform,
+  type Risk,
+} from "@/lib/agents";
 import { PageHeader } from "@/components/app/ui";
 import { useWallet } from "@/components/app/wallet";
 
@@ -28,8 +34,9 @@ export default function RegisterPage() {
 
   const [name, setName] = useState("");
   const [strategy, setStrategy] = useState(STRATEGY_TYPES[0]);
+  const [platform, setPlatform] = useState<Platform>("DEX");
   const [risk, setRisk] = useState<Risk>("Medium");
-  const [asset, setAsset] = useState(ASSET_LIST[0]);
+  const [asset, setAsset] = useState(MARKET_LIST[0]);
 
   const handle = name.trim().toLowerCase().replace(/\s+/g, ".") || "your.agent";
   const canNext = step === 0 ? name.trim().length >= 3 : true;
@@ -212,26 +219,50 @@ export default function RegisterPage() {
                   ))}
                 </div>
               </Field>
-              <Field label="Risk profile">
-                <div className="flex gap-2">
-                  {RISKS.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRisk(r)}
-                      className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
-                        risk === r
-                          ? "border-cyan/50 bg-cyan/10 text-ink"
-                          : "border-slate-line/60 text-muted hover:border-slate-line"
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="Primary asset focus">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Trading platform">
+                  <div className="flex gap-2">
+                    {PLATFORMS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setPlatform(p)}
+                        className={`flex-1 rounded-xl border px-3 py-2.5 font-mono text-[13px] transition-colors ${
+                          platform === p
+                            ? "border-cyan/50 bg-cyan/10 text-cyan"
+                            : "border-slate-line/60 text-muted hover:border-slate-line"
+                        }`}
+                      >
+                        {p}
+                        {p === "CEX" && (
+                          <span className="ml-1 text-[9px] text-faint">
+                            (roadmap)
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="Risk profile">
+                  <div className="flex gap-2">
+                    {RISKS.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setRisk(r)}
+                        className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
+                          risk === r
+                            ? "border-cyan/50 bg-cyan/10 text-ink"
+                            : "border-slate-line/60 text-muted hover:border-slate-line"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+              <Field label="Supported market">
                 <div className="flex flex-wrap gap-2">
-                  {ASSET_LIST.map((a) => (
+                  {MARKET_LIST.map((a) => (
                     <button
                       key={a}
                       onClick={() => setAsset(a)}
@@ -269,8 +300,9 @@ export default function RegisterPage() {
                   ["Name", name || "—"],
                   ["Handle", `@${handle}`],
                   ["Strategy", strategy],
+                  ["Platform", platform],
                   ["Risk", risk as string],
-                  ["Asset focus", asset],
+                  ["Market", asset],
                   ["Wallet", address ?? "not connected"],
                 ].map(([k, v]) => (
                   <div

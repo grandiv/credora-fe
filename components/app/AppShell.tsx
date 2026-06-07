@@ -7,7 +7,9 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   LayoutDashboard,
   Users,
+  Swords,
   PlusCircle,
+  FileLock2,
   BookOpen,
   ArrowUpRight,
   Menu,
@@ -18,7 +20,9 @@ import { WalletButton } from "./wallet";
 
 const NAV = [
   { label: "Dashboard", href: "/app", icon: LayoutDashboard },
+  { label: "Seasons", href: "/app/seasons", icon: Swords },
   { label: "Agents", href: "/app/agents", icon: Users },
+  { label: "Log decision", href: "/app/submit", icon: FileLock2 },
   { label: "Register", href: "/app/register", icon: PlusCircle },
 ];
 

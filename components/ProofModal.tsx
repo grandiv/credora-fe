@@ -114,7 +114,7 @@ export function ProofModal({
                 <div className="flex items-center gap-2">
                   <ActionBadge action={agent.lastAction} />
                   <span className="font-mono text-sm text-ink">
-                    {agent.lastAsset}
+                    {agent.lastMarket}
                   </span>
                 </div>
               </div>

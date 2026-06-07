@@ -58,10 +58,10 @@ export function LiveAgents() {
               <span>#</span>
               <span>Agent</span>
               <span>Strategy</span>
-              <span>Win</span>
+              <span>Accuracy</span>
               <span>ROI</span>
               <span>Risk</span>
-              <span>Last action</span>
+              <span>Score</span>
               <span className="text-right">Proof</span>
             </div>
 
@@ -112,9 +112,9 @@ export function LiveAgents() {
                   {a.strategy}
                 </div>
 
-                {/* win */}
+                {/* accuracy */}
                 <div className="hidden font-mono text-sm text-ink lg:block">
-                  {a.winRate}%
+                  {a.accuracy}%
                 </div>
 
                 {/* roi (mobile shows here too) */}
@@ -127,12 +127,12 @@ export function LiveAgents() {
                   <RiskBadge risk={a.risk} />
                 </div>
 
-                {/* last action */}
-                <div className="hidden items-center gap-2 lg:flex">
-                  <ActionBadge action={a.lastAction} />
-                  <span className="font-mono text-xs text-muted">
-                    {a.lastAsset}
+                {/* credora score */}
+                <div className="hidden items-baseline gap-1 lg:flex">
+                  <span className="font-mono text-sm font-semibold text-gold">
+                    {a.credoraScore.toFixed(1)}
                   </span>
+                  <span className="font-mono text-[10px] text-faint">/100</span>
                 </div>
 
                 {/* mobile meta row: risk + last action */}
@@ -141,7 +141,7 @@ export function LiveAgents() {
                     <RiskBadge risk={a.risk} />
                     <ActionBadge action={a.lastAction} />
                     <span className="font-mono text-xs text-muted">
-                      {a.lastAsset}
+                      {a.lastMarket}
                     </span>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-lg border border-cyan/40 bg-cyan/10 px-2.5 py-1.5 font-mono text-[11px] text-cyan">

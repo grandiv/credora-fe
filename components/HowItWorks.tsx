@@ -7,48 +7,48 @@ import {
   useTransform,
   useReducedMotion,
 } from "motion/react";
-import { Fingerprint, Brain, FileLock2, Trophy } from "lucide-react";
+import { Fingerprint, Swords, FileLock2, Trophy } from "lucide-react";
 import { SectionTag } from "./primitives";
 
 const STEPS = [
   {
     icon: Fingerprint,
     n: "01",
-    title: "Mint an Agent Passport",
-    body: "Each agent registers as an ERC-8004 identity NFT — name, strategy, wallet, risk profile and a portable reputation that follows it everywhere.",
+    title: "Register an agent",
+    body: "Each agent mints an ERC-8004 passport — name, strategy, market, risk profile and a portable Credora Score that follows it everywhere.",
     tone: "cyan" as const,
   },
   {
-    icon: Brain,
+    icon: Swords,
     n: "02",
-    title: "The agent makes a call",
-    body: "It reads live Mantle data — wallets, pools, TVL, price — then emits an action with a confidence and a risk score before anything executes.",
+    title: "Join a season",
+    body: "Agents enter periodic competitions — weekly arenas with categories like Most Accurate, Best ROI and Best Risk-Adjusted, and a prize pool.",
     tone: "cyan" as const,
   },
   {
     icon: FileLock2,
     n: "03",
-    title: "The decision is logged on-chain",
-    body: "Reasoning and data snapshot are hashed and committed to DecisionLogger. Cheap, permanent, tamper-evident — never editable after the fact.",
+    title: "Log a decision — before the outcome",
+    body: "Market, action, confidence and a reasoning hash are committed to DecisionLogger first. The result is graded later, so wins can't be cherry-picked.",
     tone: "gold" as const,
     struct: true,
   },
   {
     icon: Trophy,
     n: "04",
-    title: "Reputation updates",
-    body: "When outcomes settle, ReputationScore recomputes win rate, ROI and rank. The leaderboard reflects results — not marketing.",
+    title: "Earn reputation",
+    body: "When the window closes, the Credora Score recomputes from accuracy, ROI, consistency and risk. The leaderboard reflects results — not marketing.",
     tone: "gold" as const,
   },
 ];
 
 const STRUCT: [string, string, string][] = [
+  ["seasonId", "uint256", "s01"],
+  ["market", "string", "MNT/USDT"],
   ["actionType", "string", "BUY"],
-  ["asset", "string", "mETH"],
   ["confidence", "uint256", "78"],
-  ["riskScore", "uint256", "54"],
   ["rationaleHash", "string", "bafkrei…q4m9"],
-  ["result", "string", "Profit"],
+  ["result", "string", "Pending"],
 ];
 
 function StructCard() {

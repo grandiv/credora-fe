@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect } from "react";
-import { X, ExternalLink, Copy, BadgeCheck, CircleCheck, Clock, CircleX } from "lucide-react";
+import { X, ExternalLink, Copy, BadgeCheck, CircleCheck, Clock, CircleX, Lock } from "lucide-react";
 import type { DecisionRow } from "@/lib/agents";
 import { ActionBadge } from "@/components/primitives";
 
@@ -14,11 +14,11 @@ function resultTone(r: DecisionRow["result"]) {
 
 function rationaleFor(d: DecisionRow) {
   const map: Record<string, string> = {
-    BUY: `Signal fired on ${d.asset}: accumulation by tracked smart wallets diverging from flat price action. Entry sized to the risk envelope.`,
-    SELL: `Momentum exhaustion on ${d.asset} as funding flipped negative into thinning depth. De-risked the position and trailed the remainder.`,
-    HOLD: `${d.asset} carry remains superior to rotating; no collateral or oracle drift detected. Maintain exposure through the next epoch.`,
-    ALERT: `Liquidity anomaly on ${d.asset}: concentration pattern consistent with a pre-position. Flagged for watchlist, no execution.`,
-    REBALANCE: `Portfolio drift on ${d.asset} exceeded the target band. Rebalanced toward weights to lock realised gains and restore risk envelope.`,
+    BUY: `Signal fired on ${d.market}: accumulation by tracked smart wallets diverging from flat price action. Entry sized to the risk envelope.`,
+    SELL: `Momentum exhaustion on ${d.market} as funding flipped negative into thinning depth. De-risked the position and trailed the remainder.`,
+    HOLD: `${d.market} carry remains superior to rotating; no collateral or oracle drift detected. Maintain exposure through the next epoch.`,
+    ALERT: `Liquidity anomaly on ${d.market}: concentration pattern consistent with a pre-position. Flagged for watchlist, no execution.`,
+    REBALANCE: `Portfolio drift on ${d.market} exceeded the target band. Rebalanced toward weights to lock realised gains and restore risk envelope.`,
   };
   return map[d.action];
 }
@@ -115,7 +115,7 @@ export function DecisionModal({
                 <div className="flex items-center gap-2">
                   <ActionBadge action={decision.action} />
                   <span className="font-mono text-sm text-ink">
-                    {decision.asset}
+                    {decision.market}
                   </span>
                 </div>
               </div>
@@ -166,8 +166,21 @@ export function DecisionModal({
                 </p>
               </div>
 
+              {/* logged-before-outcome banner */}
+              <div className="mb-4 flex items-center gap-2 rounded-xl border border-cyan/20 bg-cyan/[0.04] px-3.5 py-2.5">
+                <Lock className="h-3.5 w-3.5 shrink-0 text-cyan" />
+                <span className="font-mono text-[11px] leading-relaxed text-muted">
+                  Logged{" "}
+                  <span className="text-cyan">before the outcome</span> — entry{" "}
+                  {decision.entry} · resolves in {decision.window}.
+                </span>
+              </div>
+
               <div className="rounded-2xl border border-slate-line/60 bg-navy-deep/40 px-4">
                 <Field label="Decision ID" value={decision.id} />
+                <Field label="Season" value={decision.seasonId.toUpperCase()} />
+                <Field label="Market" value={decision.market} />
+                <Field label="Prediction window" value={decision.window} />
                 <Field
                   label="Tx hash"
                   value={`${decision.txHash.slice(0, 14)}…${decision.txHash.slice(-6)}`}
