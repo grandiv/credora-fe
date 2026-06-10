@@ -1,9 +1,10 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X, ExternalLink, Copy, BadgeCheck, CircleCheck, Clock, CircleX, Lock } from "lucide-react";
 import type { DecisionRow } from "@/lib/agents";
+import { fetchProof, explorerTx, MANTLE } from "@/lib/contract";
 import { ActionBadge } from "@/components/primitives";
 
 function resultTone(r: DecisionRow["result"]) {
@@ -52,6 +53,10 @@ export function DecisionModal({
   decision: DecisionRow | null;
   onClose: () => void;
 }) {
+  const [proof, setProof] = useState<{ txHash: string; explorerUrl: string } | null>(
+    null,
+  );
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     if (decision) {
@@ -63,6 +68,21 @@ export function DecisionModal({
       document.body.style.overflow = "";
     };
   }, [decision, onClose]);
+
+  // pull the on-chain tx/explorer link from the backend proof (api mode)
+  useEffect(() => {
+    setProof(null);
+    if (!decision) return;
+    let alive = true;
+    fetchProof(decision.id).then((p) => {
+      if (alive && p?.proof) {
+        setProof({ txHash: p.proof.txHash, explorerUrl: p.proof.explorerUrl });
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [decision]);
 
   return (
     <AnimatePresence>
@@ -187,21 +207,33 @@ export function DecisionModal({
                 />
                 <Field
                   label="Tx hash"
-                  value={`${decision.txHash.slice(0, 14)}…${decision.txHash.slice(-6)}`}
+                  value={(() => {
+                    const h = proof?.txHash ?? decision.txHash;
+                    return h.length > 22 ? `${h.slice(0, 14)}…${h.slice(-6)}` : h;
+                  })()}
                   copy
                 />
                 <Field label="Logged" value={decision.ago} />
-                <Field label="Block" value="#19,482,007" />
               </div>
 
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                className="group mt-4 flex items-center justify-center gap-2 rounded-xl bg-gold py-3 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_24px_-2px_rgba(210,96,26,0.6)]"
-              >
-                Verify on Mantle Explorer
-                <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
+              {(() => {
+                // a real, full-length tx hash → tx page; otherwise explorer home
+                const real = /^0x[0-9a-fA-F]{64}$/.test(proof?.txHash ?? "");
+                const href = real
+                  ? explorerTx(proof!.txHash)
+                  : (proof?.explorerUrl ?? `${MANTLE.explorer}/`);
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group mt-4 flex items-center justify-center gap-2 rounded-xl bg-gold py-3 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_24px_-2px_rgba(210,96,26,0.6)]"
+                  >
+                    {real ? "Verify on Mantle Explorer" : "Open Mantle Explorer"}
+                    <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </a>
+                );
+              })()}
             </div>
           </motion.div>
         </motion.div>

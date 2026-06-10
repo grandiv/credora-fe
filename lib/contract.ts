@@ -1,18 +1,19 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────
- *  Credora — Smart-contract integration seam
+ *  Credora — integration seam (Backend reads + Smart-contract writes)
  * ─────────────────────────────────────────────────────────────────────────
- *  STATUS: MOCK ONLY. Nothing here touches a chain, wallet, RPC or wagmi/viem.
- *  The whole frontend reads/writes through THIS file, so when the Mantle
- *  contracts are deployed, integration is a drop-in: flip DATA_SOURCE to
- *  "onchain" and fill in the TODO(contract) branches. No page/component
- *  changes required.
+ *  The WHOLE app reads/writes through this file. Two independent switches:
  *
- *  Planned contracts (separate repo):
- *    • AgentRegistry   — ERC-721/8004 identity passports
- *    • SeasonManager   — create/join seasons, final scores, reward vault
- *    • DecisionLogger  — append-only Decision struct log (logged pre-outcome)
- *    • ReputationScore — derived Credora Score (accuracy/ROI/risk/verified)
+ *    READ_SOURCE  = "mock" | "api"    reads come from mock data or Credora-Backend
+ *    WRITE_SOURCE = "mock" | "chain"  writes are faked or sent to Mantle contracts
+ *
+ *  They flip independently because the backend (reads) and the deployed
+ *  contracts (writes) come online at different times. With both = mock the
+ *  app is identical to the offline demo.
+ *
+ *  Backend  : ../Credora-Backend   (GET /api/* — see lib/backend.ts for shapes)
+ *  Contracts: ../Credora-Contract  (AgentPassport / SeasonManager / DecisionLogger)
+ *  Misalignments needing a BE/SC change: docs/credora-integration/CONTEXT_FOR_BE_SC.md
  * ─────────────────────────────────────────────────────────────────────────
  */
 
@@ -29,40 +30,180 @@ import {
   type Season,
   type Risk,
 } from "./agents";
+import {
+  mapAgent,
+  mapDecision,
+  mapSeason,
+  type BeAgent,
+  type BeDecision,
+  type BeLeaderRow,
+  type BeOutcome,
+  type BeProof,
+  type BeSeason,
+} from "./backend";
 
-/** Flip to "onchain" once the contracts are live and the branches below are filled in. */
-export const DATA_SOURCE: "mock" | "onchain" = "mock";
+/* ── source switches (env-driven, safe defaults) ── */
+export const READ_SOURCE: "mock" | "api" =
+  process.env.NEXT_PUBLIC_READ_SOURCE === "api" ? "api" : "mock";
+export const WRITE_SOURCE: "mock" | "chain" =
+  process.env.NEXT_PUBLIC_WRITE_SOURCE === "chain" ? "chain" : "mock";
 
-/** Contract addresses — populated from env when deployed. Empty = not wired yet. */
+/* ── deployed contract addresses (fill after SC deploy) ── */
 export const CONTRACTS = {
-  agentRegistry: process.env.NEXT_PUBLIC_AGENT_REGISTRY ?? "",
+  agentPassport: process.env.NEXT_PUBLIC_AGENT_PASSPORT ?? "",
+  seasonManager: process.env.NEXT_PUBLIC_SEASON_MANAGER ?? "",
   decisionLogger: process.env.NEXT_PUBLIC_DECISION_LOGGER ?? "",
-  reputationScore: process.env.NEXT_PUBLIC_REPUTATION_SCORE ?? "",
+  outcomeRegistry: process.env.NEXT_PUBLIC_OUTCOME_REGISTRY ?? "",
+  reputationEngine: process.env.NEXT_PUBLIC_REPUTATION_ENGINE ?? "",
 } as const;
 
 export const MANTLE = {
-  chainId: 5003, // Mantle Sepolia testnet
+  chainId: Number(process.env.NEXT_PUBLIC_MANTLE_CHAIN_ID ?? 5003),
   rpcUrl: process.env.NEXT_PUBLIC_MANTLE_RPC_URL ?? "",
   explorer: "https://explorer.sepolia.mantle.xyz",
 } as const;
 
-/** Build a tx/address explorer link (used by the proof modals today). */
 export function explorerTx(hash: string) {
   return `${MANTLE.explorer}/tx/${hash}`;
 }
 
-/* ── On-chain struct shape the DecisionLogger will emit (matches the brief) ──
- *
- *   struct Decision {
- *     uint256 agentId;  string actionType;  string asset;
- *     uint256 confidence;  uint256 riskScore;  string rationaleHash;
- *     bytes32 dataSnapshotHash;  address executor;  uint256 timestamp;
- *     string  result;
- *   }
- *
- * `mapDecision()` is where the raw on-chain tuple gets adapted into the
- * `DecisionRow` the UI already renders.
- */
+/* same-origin proxy → backend (see app/api/credora/[...path]/route.ts) */
+async function apiGet<T>(path: string): Promise<T> {
+  const res = await fetch(`/api/credora${path}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`backend ${path} → ${res.status}`);
+  return res.json() as Promise<T>;
+}
+async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`/api/credora${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`backend ${path} → ${res.status}`);
+  return res.json() as Promise<T>;
+}
+
+/* newest decision per agent, for the "last action" snapshot */
+function latestByAgent(decisions: BeDecision[]) {
+  const m = new Map<string, BeDecision>();
+  for (const d of decisions) {
+    const cur = m.get(d.agentId);
+    if (!cur || d.submittedAt > cur.submittedAt) m.set(d.agentId, d);
+  }
+  return m;
+}
+
+/* ───────────────────────────── READS ─────────────────────────────────── */
+
+export async function fetchAgents(): Promise<Agent[]> {
+  if (READ_SOURCE === "mock") return AGENTS;
+  const [lb, ag, dec] = await Promise.all([
+    apiGet<{ leaderboard: BeLeaderRow[] }>("/leaderboard"),
+    apiGet<{ agents: BeAgent[] }>("/agents"),
+    apiGet<{ decisions: BeDecision[] }>("/decisions"),
+  ]);
+  const metaById = new Map(ag.agents.map((a) => [a.id, a]));
+  const latest = latestByAgent(dec.decisions);
+  return lb.leaderboard.map((row) =>
+    mapAgent(row, metaById.get(row.agentId), latest.get(row.agentId)),
+  );
+}
+
+export async function fetchAgent(id: string): Promise<Agent | undefined> {
+  if (READ_SOURCE === "mock") return getAgent(id);
+  return (await fetchAgents()).find((a) => a.id === id);
+}
+
+export async function fetchAgentHistory(agent: Agent): Promise<DecisionRow[]> {
+  if (READ_SOURCE === "mock") return agentHistory(agent);
+  const [dec, out] = await Promise.all([
+    apiGet<{ decisions: BeDecision[] }>("/decisions"),
+    apiGet<{ outcomes: BeOutcome[] }>("/outcomes"),
+  ]);
+  const outByDecision = new Map(out.outcomes.map((o) => [o.decisionId, o]));
+  return dec.decisions
+    .filter((d) => d.agentId === agent.id)
+    .sort((a, b) => (a.submittedAt < b.submittedAt ? 1 : -1))
+    .map((d) => ({
+      ...mapDecision(d, outByDecision.get(d.id)),
+      agent: agent.name,
+    }));
+}
+
+/** Score trend — backend has no time-series yet, so synthesize from the score. */
+export async function fetchAgentSeries(agent: Agent): Promise<number[]> {
+  return agentSeries(agent);
+}
+
+export async function fetchLiveFeed(): Promise<DecisionRow[]> {
+  if (READ_SOURCE === "mock") return LIVE_FEED;
+  const [dec, out, ag] = await Promise.all([
+    apiGet<{ decisions: BeDecision[] }>("/decisions"),
+    apiGet<{ outcomes: BeOutcome[] }>("/outcomes"),
+    apiGet<{ agents: BeAgent[] }>("/agents"),
+  ]);
+  const outByDecision = new Map(out.outcomes.map((o) => [o.decisionId, o]));
+  const nameById = new Map(ag.agents.map((a) => [a.id, a.name]));
+  return dec.decisions
+    .slice()
+    .sort((a, b) => (a.submittedAt < b.submittedAt ? 1 : -1))
+    .slice(0, 18)
+    .map((d) => ({
+      ...mapDecision(d, outByDecision.get(d.id)),
+      agent: nameById.get(d.agentId) ?? d.agentId,
+    }));
+}
+
+export async function fetchSeasons(): Promise<Season[]> {
+  if (READ_SOURCE === "mock") return SEASONS;
+  const [cur, lb, dec] = await Promise.all([
+    apiGet<BeSeason>("/season/current"),
+    apiGet<{ leaderboard: BeLeaderRow[] }>("/leaderboard"),
+    apiGet<{ decisions: BeDecision[] }>("/decisions"),
+  ]);
+  const s = mapSeason(cur);
+  s.participants = lb.leaderboard.length;
+  s.decisionsLogged = dec.decisions.length;
+  return [s];
+}
+
+export async function fetchSeason(id: string): Promise<Season | undefined> {
+  if (READ_SOURCE === "mock") return getSeason(id);
+  const all = await fetchSeasons();
+  return all.find((s) => s.id === id) ?? all[0];
+}
+
+/** Full proof payload for the Decision Proof modal (real hashes + tx). */
+export async function fetchProof(decisionId: string): Promise<BeProof | undefined> {
+  if (READ_SOURCE === "mock") return undefined; // modal uses local data in mock mode
+  try {
+    return await apiGet<BeProof>(`/proof/${encodeURIComponent(decisionId)}`);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Demo agent run → server-simulated decision (backend), or faked in mock. */
+export async function runDemoAgent(
+  agentId: string,
+  market: string,
+): Promise<{ decision: DecisionRow } | undefined> {
+  if (READ_SOURCE === "mock") return undefined; // page falls back to local makeDecision()
+  try {
+    const res = await apiPost<{ decision: BeDecision; outcome?: BeOutcome }>(
+      "/agents/run",
+      { agentId, market },
+    );
+    return { decision: mapDecision(res.decision, res.outcome) };
+  } catch {
+    return undefined;
+  }
+}
+
+/* ──────────────────────────── WRITES ─────────────────────────────────── */
+/* Chain writes are REAL viem calls but require deployed addresses + a wallet.
+   They stay gated behind WRITE_SOURCE="chain"; default "mock" keeps the demo
+   working. See lib/chain.ts for the viem implementation. */
 
 export type RegisterAgentInput = {
   name: string;
@@ -70,7 +211,7 @@ export type RegisterAgentInput = {
   platform: "DEX" | "CEX";
   risk: Risk;
   market: string;
-  controller: string; // wallet address
+  controller: string;
 };
 
 export type LogDecisionInput = {
@@ -84,77 +225,15 @@ export type LogDecisionInput = {
   rationale: string;
 };
 
-/* ───────────────────────────── READS ─────────────────────────────────── */
-
-export async function fetchAgents(): Promise<Agent[]> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): ReputationScore.getLeaderboard() + AgentRegistry.tokenURI()
-    throw new Error("onchain reads not wired yet");
-  }
-  return AGENTS;
-}
-
-export async function fetchAgent(id: string): Promise<Agent | undefined> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): AgentRegistry.agentOf(id) + ReputationScore.scoreOf(id)
-    throw new Error("onchain reads not wired yet");
-  }
-  return getAgent(id);
-}
-
-export async function fetchAgentHistory(agent: Agent): Promise<DecisionRow[]> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): DecisionLogger.getDecisions(agentId) -> map(mapDecision)
-    throw new Error("onchain reads not wired yet");
-  }
-  return agentHistory(agent);
-}
-
-export async function fetchAgentSeries(agent: Agent): Promise<number[]> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): derive from ReputationScore history events
-    throw new Error("onchain reads not wired yet");
-  }
-  return agentSeries(agent);
-}
-
-export async function fetchLiveFeed(): Promise<DecisionRow[]> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): subscribe to DecisionLogger `DecisionLogged` events
-    throw new Error("onchain reads not wired yet");
-  }
-  return LIVE_FEED;
-}
-
-export async function fetchSeasons(): Promise<Season[]> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): SeasonManager.getSeasons()
-    throw new Error("onchain reads not wired yet");
-  }
-  return SEASONS;
-}
-
-export async function fetchSeason(id: string): Promise<Season | undefined> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): SeasonManager.getSeason(id) + standings
-    throw new Error("onchain reads not wired yet");
-  }
-  return getSeason(id);
-}
-
-/* ──────────────────────────── WRITES ─────────────────────────────────── */
-
 export type TxResult = { agentId?: string; txHash: string; status: "verified" };
 
-export async function registerAgent(
-  input: RegisterAgentInput,
-): Promise<TxResult> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): writeContract(AgentRegistry.mint, [metadataURI, controller])
-    //                 then wait for the AgentRegistered event → return real ids.
-    throw new Error("onchain writes not wired yet");
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export async function registerAgent(input: RegisterAgentInput): Promise<TxResult> {
+  if (WRITE_SOURCE === "chain") {
+    const { chainRegisterAgent } = await import("./chain");
+    return chainRegisterAgent(input);
   }
-  // mock: pretend-mint with a deterministic-looking result
   void input;
   await wait(1900);
   return { agentId: "0x0006", txHash: "0x7d1a…c4e2", status: "verified" };
@@ -164,9 +243,9 @@ export async function joinSeason(
   agentId: string,
   seasonId: string,
 ): Promise<TxResult> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): writeContract(SeasonManager.joinSeason, [agentId, seasonId])
-    throw new Error("onchain writes not wired yet");
+  if (WRITE_SOURCE === "chain") {
+    const { chainJoinSeason } = await import("./chain");
+    return chainJoinSeason(agentId, seasonId);
   }
   void agentId;
   void seasonId;
@@ -175,15 +254,11 @@ export async function joinSeason(
 }
 
 export async function logDecision(input: LogDecisionInput): Promise<TxResult> {
-  if (DATA_SOURCE === "onchain") {
-    // TODO(contract): writeContract(DecisionLogger.log, [Decision{...}])
-    throw new Error("onchain writes not wired yet");
+  if (WRITE_SOURCE === "chain") {
+    const { chainLogDecision } = await import("./chain");
+    return chainLogDecision(input);
   }
   void input;
   await wait(1200);
   return { txHash: "0x" + Math.random().toString(16).slice(2, 14), status: "verified" };
-}
-
-function wait(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
 }

@@ -316,9 +316,16 @@ function hex(seed: number, len: number) {
   );
 }
 
+/** Stable numeric seed from any id (numeric "1" or string "bybit-copy:…"). */
+function idSeed(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 1_000_003;
+  return h + 1;
+}
+
 function buildHistory(agent: Agent, count: number): DecisionRow[] {
   const rows: DecisionRow[] = [];
-  const seed = parseInt(agent.id, 10) * 7;
+  const seed = idSeed(agent.id) * 7;
   for (let i = 0; i < count; i++) {
     const r = hash(seed + i);
     const r2 = hash(seed + i + 100);
@@ -379,7 +386,7 @@ export function agentHistory(agent: Agent): DecisionRow[] {
 
 /** Credora Score trend series for the passport chart (24 points, 0-100). */
 export function agentSeries(agent: Agent): number[] {
-  const seed = parseInt(agent.id, 10) * 13;
+  const seed = idSeed(agent.id) * 13;
   const pts: number[] = [];
   let v = agent.credoraScore - 14;
   for (let i = 0; i < 24; i++) {

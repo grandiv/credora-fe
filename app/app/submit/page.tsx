@@ -16,12 +16,14 @@ import {
 import {
   MARKET_LIST,
   WINDOW_LIST,
-  AGENTS,
-  activeSeason,
+  activeSeason as mockActiveSeason,
   makeDecision,
   type Action,
+  type DecisionRow,
   type Risk,
 } from "@/lib/agents";
+import { runDemoAgent } from "@/lib/contract";
+import { useAgents, useSeasons } from "@/lib/useCredora";
 import { PageHeader } from "@/components/app/ui";
 import { useWallet } from "@/components/app/wallet";
 import { useSession } from "@/components/app/session";
@@ -40,10 +42,12 @@ const DEMO_REASONS = [
 export default function SubmitDecisionPage() {
   const { address, connect, connecting } = useWallet();
   const { addDecision } = useSession();
-  const season = activeSeason();
+  const { data: agents } = useAgents();
+  const { data: seasons } = useSeasons();
+  const season = seasons[0] ?? mockActiveSeason();
 
   const [phase, setPhase] = useState<Phase>("form");
-  const [agent, setAgent] = useState(AGENTS[0].id);
+  const [agent, setAgent] = useState("");
   const [market, setMarket] = useState(MARKET_LIST[0]);
   const [action, setAction] = useState<Action>("BUY");
   const [confidence, setConfidence] = useState(72);
@@ -51,34 +55,55 @@ export default function SubmitDecisionPage() {
   const [window, setWindow] = useState(WINDOW_LIST[1]);
   const [reasoning, setReasoning] = useState("");
   const [generated, setGenerated] = useState(false);
+  // decision returned by the backend's run-demo (used on submit when present)
+  const [backendDecision, setBackendDecision] = useState<DecisionRow | null>(null);
 
-  /* "Run demo agent" — auto-fills a realistic call (the AI moment) */
-  const runDemo = () => {
-    const a = AGENTS[Math.floor(Math.random() * AGENTS.length)];
-    const acts: Action[] = ["BUY", "SELL", "HOLD"];
-    setAgent(a.id);
-    setMarket(a.markets[0]);
-    setAction(acts[Math.floor(Math.random() * acts.length)]);
-    setConfidence(60 + Math.floor(Math.random() * 35));
-    setRisk(a.risk);
-    setWindow(WINDOW_LIST[Math.floor(Math.random() * WINDOW_LIST.length)]);
-    setReasoning(DEMO_REASONS[Math.floor(Math.random() * DEMO_REASONS.length)]);
+  const selectedAgent = agents.find((x) => x.id === agent) ?? agents[0];
+
+  /* "Run demo agent" — backend simulates a call (api), else local fill */
+  const runDemo = async () => {
+    const a = agents[Math.floor(Math.random() * agents.length)] ?? agents[0];
+    if (!a) return;
+    const mkt = a.markets[0] ?? MARKET_LIST[0];
+    const fromBackend = await runDemoAgent(a.id, mkt);
+    if (fromBackend) {
+      const d = fromBackend.decision;
+      setAgent(a.id);
+      setMarket(d.market);
+      setAction(d.action);
+      setConfidence(d.confidence);
+      setRisk(d.riskScore < 34 ? "Low" : d.riskScore > 66 ? "High" : "Medium");
+      setWindow(d.window);
+      setReasoning(DEMO_REASONS[Math.floor(Math.random() * DEMO_REASONS.length)]);
+      setBackendDecision({ ...d, agent: a.name });
+    } else {
+      const acts: Action[] = ["BUY", "SELL", "HOLD"];
+      setAgent(a.id);
+      setMarket(mkt);
+      setAction(acts[Math.floor(Math.random() * acts.length)]);
+      setConfidence(60 + Math.floor(Math.random() * 35));
+      setRisk(a.risk);
+      setWindow(WINDOW_LIST[Math.floor(Math.random() * WINDOW_LIST.length)]);
+      setReasoning(DEMO_REASONS[Math.floor(Math.random() * DEMO_REASONS.length)]);
+      setBackendDecision(null);
+    }
     setGenerated(true);
   };
 
   const submit = () => {
     setPhase("logging");
-    const a = AGENTS.find((x) => x.id === agent) ?? AGENTS[0];
+    const a = selectedAgent;
     addDecision(
-      makeDecision({
-        agentId: a.id,
-        agent: a.name,
-        action,
-        market,
-        confidence,
-        risk,
-        window,
-      }),
+      backendDecision ??
+        makeDecision({
+          agentId: a?.id ?? "1",
+          agent: a?.name ?? "Agent",
+          action,
+          market,
+          confidence,
+          risk,
+          window,
+        }),
     );
     setTimeout(() => setPhase("done"), 1700);
   };
@@ -109,7 +134,7 @@ export default function SubmitDecisionPage() {
 
           <div className="mt-6 space-y-2 rounded-2xl border border-slate-line/60 bg-navy-deep/50 p-4 text-left font-mono text-[12px]">
             {[
-              ["Agent", AGENTS.find((a) => a.id === agent)?.name ?? "—"],
+              ["Agent", selectedAgent?.name ?? "—"],
               ["Market", market],
               ["Action", action],
               ["Confidence", `${confidence}%`],
@@ -185,12 +210,12 @@ export default function SubmitDecisionPage() {
         {/* agent */}
         <Field label="Agent">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {AGENTS.map((a) => (
+            {agents.map((a) => (
               <button
                 key={a.id}
                 onClick={() => setAgent(a.id)}
                 className={`rounded-xl border px-3 py-2.5 text-left text-[13px] transition-colors ${
-                  agent === a.id
+                  (agent || agents[0]?.id) === a.id
                     ? "border-cyan/50 bg-cyan/10 text-ink"
                     : "border-slate-line/60 text-muted hover:border-slate-line"
                 }`}

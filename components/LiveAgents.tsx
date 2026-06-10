@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { ArrowUpRight, Crown } from "lucide-react";
-import { AGENTS, type Agent } from "@/lib/agents";
+import { type Agent } from "@/lib/agents";
+import { useAgents } from "@/lib/useCredora";
 import { ActionBadge, Reveal, RiskBadge, SectionTag } from "./primitives";
 import { ProofModal } from "./ProofModal";
 
@@ -27,6 +28,7 @@ function RoiBar({ roi }: { roi: number }) {
 
 export function LiveAgents() {
   const [selected, setSelected] = useState<Agent | null>(null);
+  const { data: agents } = useAgents();
 
   return (
     <section id="agents" className="relative overflow-hidden py-24 sm:py-32">
@@ -65,7 +67,7 @@ export function LiveAgents() {
               <span className="text-right">Proof</span>
             </div>
 
-            {AGENTS.map((a, i) => (
+            {agents.map((a, i) => (
               <motion.button
                 key={a.id}
                 onClick={() => setSelected(a)}

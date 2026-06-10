@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ConnectionStatus } from "./ConnectionStatus";
 import { WalletButton } from "./wallet";
 
 const NAV = [
@@ -89,17 +90,7 @@ function SidebarInner() {
           Back to site
           <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-faint" />
         </a>
-        <div className="rounded-2xl border border-slate-line/60 bg-white/[0.02] p-3.5">
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan shadow-[0_0_8px_2px_rgba(210,96,26,0.7)]" />
-            <span className="font-mono text-[11px] text-muted">
-              Mantle Testnet
-            </span>
-          </div>
-          <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-faint">
-            Registry · DecisionLogger · Reputation deployed &amp; verified.
-          </p>
-        </div>
+        <ConnectionStatus />
       </div>
     </div>
   );

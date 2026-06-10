@@ -5,12 +5,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, Swords, Trophy, Check, Plus, LoaderCircle } from "lucide-react";
-import {
-  getSeason,
-  AGENTS,
-  SCORE_WEIGHTS,
-  type Agent,
-} from "@/lib/agents";
+import { SCORE_WEIGHTS, type Agent } from "@/lib/agents";
+import { useAgents, useSeason } from "@/lib/useCredora";
 import { RiskBadge } from "@/components/primitives";
 import { AgentAvatar, PageHeader, StatCard } from "@/components/app/ui";
 import { useSession } from "@/components/app/session";
@@ -23,7 +19,8 @@ const REWARD_SPLIT = [
 
 export default function SeasonDetailPage() {
   const params = useParams<{ id: string }>();
-  const season = getSeason(params.id);
+  const { data: season } = useSeason(params.id);
+  const { data: agents } = useAgents();
   const { joinedSeasons, joinSeason } = useSession();
   const [sort, setSort] = useState<"credoraScore" | "roi" | "accuracy">(
     "credoraScore",
@@ -58,8 +55,8 @@ export default function SeasonDetailPage() {
     );
   }
 
-  const ranked = [...AGENTS]
-    .slice(0, season.participants)
+  const ranked = [...agents]
+    .slice(0, season.participants || agents.length)
     .sort((a, b) => b[sort] - a[sort]);
 
   return (
@@ -130,7 +127,7 @@ export default function SeasonDetailPage() {
                     Enroll an agent
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {AGENTS.map((a) => {
+                    {agents.map((a) => {
                       const isJoined = joined.includes(a.id);
                       const isJoining = joining === a.id;
                       return (

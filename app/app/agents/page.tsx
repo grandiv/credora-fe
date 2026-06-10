@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import { AGENTS } from "@/lib/agents";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
 import { AgentAvatar, PageHeader } from "@/components/app/ui";
+import { useAgents } from "@/lib/useCredora";
 
 export default function AgentsPage() {
+  const { data: agents } = useAgents();
   return (
     <div className="space-y-7">
       <PageHeader
@@ -17,7 +18,7 @@ export default function AgentsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {AGENTS.map((a, i) => (
+        {agents.map((a, i) => (
           <motion.div
             key={a.id}
             initial={{ opacity: 0, y: 16 }}

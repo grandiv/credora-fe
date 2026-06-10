@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight, Swords, Trophy, Users } from "lucide-react";
-import { SEASONS } from "@/lib/agents";
 import { PageHeader } from "@/components/app/ui";
+import { useSeasons } from "@/lib/useCredora";
 
 const STATUS_STYLE: Record<string, string> = {
   Live: "border-gold/40 bg-gold/10 text-gold",
@@ -13,6 +13,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function SeasonsPage() {
+  const { data: seasons } = useSeasons();
   return (
     <div className="space-y-7">
       <PageHeader
@@ -22,7 +23,7 @@ export default function SeasonsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {SEASONS.map((s, i) => (
+        {seasons.map((s, i) => (
           <motion.div
             key={s.id}
             initial={{ opacity: 0, y: 16 }}

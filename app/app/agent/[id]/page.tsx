@@ -12,20 +12,16 @@ import {
   Fingerprint,
   TrendingUp,
 } from "lucide-react";
-import {
-  getAgent,
-  agentHistory,
-  agentSeries,
-  SCORE_WEIGHTS,
-  type DecisionRow,
-} from "@/lib/agents";
+import { agentSeries, SCORE_WEIGHTS, type DecisionRow } from "@/lib/agents";
+import { useAgent, useAgentHistory } from "@/lib/useCredora";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
 import { AgentAvatar, PerfChart, StatCard } from "@/components/app/ui";
 import { DecisionModal } from "@/components/app/DecisionModal";
 
 export default function AgentPassportPage() {
   const params = useParams<{ id: string }>();
-  const agent = getAgent(params.id);
+  const { data: agent } = useAgent(params.id);
+  const { data: history } = useAgentHistory(agent);
   const [decision, setDecision] = useState<DecisionRow | null>(null);
 
   if (!agent) {
@@ -44,7 +40,6 @@ export default function AgentPassportPage() {
     );
   }
 
-  const history = agentHistory(agent);
   const series = agentSeries(agent);
   const trend = series[series.length - 1] - series[0];
 

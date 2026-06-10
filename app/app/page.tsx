@@ -12,14 +12,12 @@ import {
   Trophy,
 } from "lucide-react";
 import {
-  AGENTS,
-  LIVE_FEED,
-  NETWORK_STATS,
-  activeSeason,
+  activeSeason as mockActiveSeason,
   agentSeries,
   type Agent,
   type DecisionRow,
 } from "@/lib/agents";
+import { useAgents, useLiveFeed, useSeasons } from "@/lib/useCredora";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
 import {
   AgentAvatar,
@@ -36,14 +34,34 @@ type SortKey = "credoraScore" | "roi" | "accuracy";
 export default function DashboardPage() {
   const [sort, setSort] = useState<SortKey>("credoraScore");
   const [decision, setDecision] = useState<DecisionRow | null>(null);
-  const season = activeSeason();
+  const { data: agents } = useAgents();
+  const { data: liveFeed } = useLiveFeed();
+  const { data: seasons } = useSeasons();
+  const season = seasons[0] ?? mockActiveSeason();
   const { loggedDecisions } = useSession();
-  // session-logged decisions appear at the top of the live feed
-  const feed = [...loggedDecisions, ...LIVE_FEED];
+  // session-logged decisions appear at the top of the feed; dedupe by id since
+  // a run-demo decision the backend already returned can also be in liveFeed.
+  const feed = useMemo(() => {
+    const seen = new Set<string>();
+    return [...loggedDecisions, ...liveFeed].filter((d) => {
+      if (seen.has(d.id)) return false;
+      seen.add(d.id);
+      return true;
+    });
+  }, [loggedDecisions, liveFeed]);
 
   const ranked = useMemo(
-    () => [...AGENTS].sort((a, b) => b[sort] - a[sort]),
-    [sort],
+    () => [...agents].sort((a, b) => b[sort] - a[sort]),
+    [sort, agents],
+  );
+
+  const stats = useMemo(
+    () => ({
+      totalAgents: agents.length,
+      decisionsLogged: liveFeed.length || season.decisionsLogged,
+      verifiedThisSeason: agents.reduce((s, a) => s + a.verifiedDecisions, 0),
+    }),
+    [agents, liveFeed, season],
   );
 
   return (
@@ -81,7 +99,7 @@ export default function DashboardPage() {
                   Live season
                 </span>
                 <span className="font-mono text-[11px] text-faint">
-                  ends in {season.endsIn}
+                  {season.endsIn ? `ends in ${season.endsIn}` : season.status}
                 </span>
               </div>
               <h2 className="mt-1.5 font-display text-xl font-semibold sm:text-2xl">
@@ -116,23 +134,23 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Agents"
-          value={<Counter to={NETWORK_STATS.totalAgents} />}
+          value={<Counter to={stats.totalAgents} />}
           accent
         />
         <StatCard
           label="Decisions logged"
-          value={<Counter to={NETWORK_STATS.decisionsLogged} />}
-          hint="on-chain, all-time"
+          value={<Counter to={stats.decisionsLogged} />}
+          hint="on-chain"
         />
         <StatCard
           label="Verified this season"
-          value={<Counter to={NETWORK_STATS.verifiedThisSeason} />}
+          value={<Counter to={stats.verifiedThisSeason} />}
           hint="graded before outcome"
         />
         <StatCard
           label="Active season"
           value={<span className="text-base sm:text-lg">{season.name}</span>}
-          hint={`ends in ${season.endsIn}`}
+          hint={season.endsIn ? `ends in ${season.endsIn}` : season.status}
         />
       </div>
 
@@ -233,7 +251,8 @@ export default function DashboardPage() {
           </div>
           <div className="max-h-[520px] divide-y divide-slate-line/40 overflow-y-auto">
             {feed.map((d, i) => {
-              const fresh = d.id.startsWith("live-");
+              // session-logged decisions sit at the front of the feed → "NEW"
+              const fresh = i < loggedDecisions.length;
               return (
               <motion.button
                 key={d.id}

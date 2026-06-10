@@ -16,7 +16,8 @@
     "next": "15.5.19",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "three": "^0.171.0"
+    "three": "^0.171.0",
+    "viem": "^2.52.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
