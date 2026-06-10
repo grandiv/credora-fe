@@ -25,21 +25,15 @@ The V2 handoff (§5) says `POST /api/agents/run` triggers background on-chain wr
 
 ## A. For the Smart-Contract dev
 
-### SC-1 — Deploy to Mantle Sepolia + share addresses  ⛔ blocker for writes
-We can't test or enable any on-chain write (register / join / submit decision) without deployed addresses.
-- **Ask:** run `forge script script/Deploy.s.sol --broadcast --rpc-url <mantle-sepolia>`; share the 5 deployed addresses (AgentPassport, SeasonManager, DecisionLogger, OutcomeRegistry, ReputationEngine) and confirm chainId **5003**. Verify on Mantle Explorer (Deployment Award needs this).
-- **What we did:** FE write code (`lib/chain.ts`) is complete and gated; it throws a clear "address not set" until you provide them. We set them via `NEXT_PUBLIC_*` env.
+### SC-1 — Deploy + share addresses  ✅ DONE
+Contracts are **deployed & verified** on Mantle Sepolia (chainId 5003); we confirmed bytecode on-chain and the seeded `DecisionSubmitted` tx. Addresses are wired into the FE env. Nothing needed.
+> Optional: share `forge build` `out/*.json` ABIs so we can swap our hand-written ones in `lib/abi.ts`.
 
-### SC-2 — `DeployScript` doesn't wire authorizations
-`Deploy.s.sol` deploys the 5 contracts but **never grants the cross-contract permissions** the flow needs:
-- `OutcomeRegistry.setOutcomeSubmitter(backendSigner, true)`
-- `ReputationEngine.setScoreSubmitter(backendSigner, true)`
-- (and the backend signer address must be known at deploy time)
-- **Ask:** in the deploy script, after construction, grant those roles to the **backend's signer address** so the backend can submit outcomes/scores. Otherwise season grading can't be written on-chain.
+### SC-2 — Submitter roles  ✅ likely DONE
+The seeded `OutcomeSubmitted` + `SeasonScoreSubmitted` + `SeasonRankSubmitted` txs in the handoff **succeeded** — which means `setOutcomeSubmitter`/`setScoreSubmitter` were already granted to the backend signer (otherwise those calls revert). No action unless a *new* signer is used.
 
-### SC-3 — `createSeason` is `onlyOwner` — who calls it, and what's the seasonId?
-The FE only **joins** seasons; it never creates them. But the demo needs at least one season to exist on-chain with a known numeric id.
-- **Ask:** confirm the **deploy script (or backend) creates "Mantle AI Alpha Challenge" as seasonId `1`** so `joinSeason(1, agentId)` works. Tell us the numeric id; the backend currently calls it `"season-1"` (string) and the FE shows `"s01"` — we normalize, but we need the on-chain numeric id.
+### SC-3 — Season id  (confirm only)
+The seeded txs imply season `1` exists on-chain. Just **confirm `joinSeason(1, agentId)` is the right call** (the FE normalizes the backend's `"season-1"` / our `"s01"` to the numeric id). No code change expected.
 
 ### SC-4 — Action enum vs FE/Backend vocab (FYI, we adapt)
 Contract `DecisionLogger.Action = {Long, Short, Hold, Alert}`. The FE uses **BUY/SELL/HOLD** (product decision). We map at the seam: `BUY→Long(0)`, `SELL→Short(1)`, `HOLD→Hold(2)`. We never emit `Alert` from the FE.
