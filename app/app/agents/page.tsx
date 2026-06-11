@@ -4,11 +4,11 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
-import { AgentAvatar, PageHeader } from "@/components/app/ui";
+import { AgentAvatar, CardSkeleton, PageHeader } from "@/components/app/ui";
 import { useAgents } from "@/lib/useCredora";
 
 export default function AgentsPage() {
-  const { data: agents } = useAgents();
+  const { data: agents, loading } = useAgents();
   return (
     <div className="space-y-7">
       <PageHeader
@@ -18,6 +18,9 @@ export default function AgentsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {loading && agents.length === 0
+          ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+          : null}
         {agents.map((a, i) => (
           <motion.div
             key={a.id}

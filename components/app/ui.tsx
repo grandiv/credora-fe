@@ -4,6 +4,35 @@ import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import type { Agent } from "@/lib/agents";
 
+/* shimmer placeholder shown while live data loads (api mode) */
+export function Skeleton({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded-md bg-slate-line/30 ${className}`}
+      aria-hidden
+    />
+  );
+}
+
+/* a card-shaped skeleton for grid/list loading states */
+export function CardSkeleton() {
+  return (
+    <div className="rounded-3xl border border-slate-line/50 bg-navy-deep/30 p-5">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-4 w-12" />
+      </div>
+      <Skeleton className="mt-3 h-3 w-40" />
+      <div className="mt-5 grid grid-cols-4 gap-2 border-t border-slate-line/40 pt-4">
+        <Skeleton className="h-7" />
+        <Skeleton className="h-7" />
+        <Skeleton className="h-7" />
+        <Skeleton className="h-7" />
+      </div>
+    </div>
+  );
+}
+
 export function PageHeader({
   eyebrow,
   title,

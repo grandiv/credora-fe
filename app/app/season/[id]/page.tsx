@@ -19,7 +19,7 @@ const REWARD_SPLIT = [
 
 export default function SeasonDetailPage() {
   const params = useParams<{ id: string }>();
-  const { data: season } = useSeason(params.id);
+  const { data: season, loading } = useSeason(params.id);
   const { data: agents } = useAgents();
   const { joinedSeasons, joinSeason } = useSession();
   const [sort, setSort] = useState<"credoraScore" | "roi" | "accuracy">(
@@ -40,7 +40,11 @@ export default function SeasonDetailPage() {
   };
 
   if (!season) {
-    return (
+    return loading ? (
+      <div className="grid place-items-center py-32 font-mono text-sm text-faint">
+        Loading season…
+      </div>
+    ) : (
       <div className="grid place-items-center py-32 text-center">
         <div>
           <p className="font-display text-2xl font-semibold">Season not found</p>

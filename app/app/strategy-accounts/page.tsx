@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight, PlusCircle, ShieldCheck, Wallet } from "lucide-react";
 import { useStrategyAccounts } from "@/lib/useCredora";
-import { PageHeader } from "@/components/app/ui";
+import { CardSkeleton, PageHeader } from "@/components/app/ui";
 
 const TYPE_LABEL: Record<string, string> = {
   cex: "CEX",
@@ -14,7 +14,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function StrategyAccountsPage() {
-  const { data: accounts } = useStrategyAccounts();
+  const { data: accounts, loading } = useStrategyAccounts();
 
   return (
     <div className="space-y-7">
@@ -34,6 +34,9 @@ export default function StrategyAccountsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {loading && accounts.length === 0
+          ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+          : null}
         {accounts.map((a, i) => (
           <motion.div
             key={a.id}

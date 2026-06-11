@@ -20,12 +20,16 @@ import { DecisionModal } from "@/components/app/DecisionModal";
 
 export default function AgentPassportPage() {
   const params = useParams<{ id: string }>();
-  const { data: agent } = useAgent(params.id);
+  const { data: agent, loading } = useAgent(params.id);
   const { data: history } = useAgentHistory(agent);
   const [decision, setDecision] = useState<DecisionRow | null>(null);
 
   if (!agent) {
-    return (
+    return loading ? (
+      <div className="grid place-items-center py-32 font-mono text-sm text-faint">
+        Loading agent…
+      </div>
+    ) : (
       <div className="grid place-items-center py-32 text-center">
         <div>
           <p className="font-display text-2xl font-semibold">Agent not found</p>

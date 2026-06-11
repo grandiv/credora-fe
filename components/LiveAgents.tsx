@@ -28,7 +28,7 @@ function RoiBar({ roi }: { roi: number }) {
 
 export function LiveAgents() {
   const [selected, setSelected] = useState<Agent | null>(null);
-  const { data: agents } = useAgents();
+  const { data: agents, loading } = useAgents();
 
   return (
     <section id="agents" className="relative overflow-hidden py-24 sm:py-32">
@@ -67,6 +67,14 @@ export function LiveAgents() {
               <span className="text-right">Proof</span>
             </div>
 
+            {loading && agents.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[58px] animate-pulse border-b border-slate-line/40 bg-white/[0.015]"
+                  />
+                ))
+              : null}
             {agents.map((a, i) => (
               <motion.button
                 key={a.id}

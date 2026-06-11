@@ -28,28 +28,30 @@ import {
 import type { BeSource, BeStrategyAccount } from "./backend";
 
 /**
- * Client data hooks. In mock mode they return the local data synchronously
- * (instant first paint, no layout shift). In api mode they start from the mock
- * as a placeholder, fetch from the backend, and fall back to mock on error so
- * the demo never shows a blank/broken screen.
+ * Client data hooks.
+ *  • mock mode → return local data synchronously (instant, no fetch).
+ *  • api mode  → start EMPTY (so mock data never flashes in the static HTML or
+ *    before the backend responds), show `loading`, fetch, and fall back to mock
+ *    ONLY if the request fails (so the demo never breaks when the BE is down).
  */
 function useResource<T>(
   mockValue: T,
   fetcher: () => Promise<T>,
 ): { data: T; loading: boolean } {
   const isApi = READ_SOURCE === "api";
-  const [data, setData] = useState<T>(mockValue);
+  // empty placeholder for api mode: [] for lists, undefined for single items
+  const emptyInitial = (
+    Array.isArray(mockValue) ? [] : undefined
+  ) as T;
+  const [data, setData] = useState<T>(isApi ? emptyInitial : mockValue);
   const [loading, setLoading] = useState(isApi);
 
   useEffect(() => {
     if (!isApi) return;
     let alive = true;
-    setLoading(true);
     fetcher()
       .then((v) => alive && v != null && setData(v))
-      .catch(() => {
-        /* keep mock fallback */
-      })
+      .catch(() => alive && setData(mockValue)) // mock only on fetch failure
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;

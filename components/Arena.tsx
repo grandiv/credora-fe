@@ -13,7 +13,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export function Arena() {
-  const { data: seasons } = useSeasons();
+  const { data: seasons, loading } = useSeasons();
   const single = seasons.length === 1;
 
   return (
@@ -37,6 +37,9 @@ export function Arena() {
         <div
           className={`mt-12 grid gap-4 ${single ? "mx-auto max-w-md" : "md:grid-cols-3"}`}
         >
+          {loading && seasons.length === 0 ? (
+            <div className="h-44 animate-pulse rounded-3xl border border-slate-line/50 bg-navy-deep/40 sm:mx-auto sm:w-full sm:max-w-md" />
+          ) : null}
           {seasons.map((s, i) => (
             <Reveal key={s.id} delay={i * 0.08}>
               <div

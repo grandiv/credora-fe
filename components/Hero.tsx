@@ -41,14 +41,16 @@ function useDeferredMount(delay = 200) {
 
 export function Hero() {
   const showCore = useDeferredMount();
-  const { data: agents } = useAgents();
+  const { data: agents, loading } = useAgents();
   const { data: feed } = useLiveFeed();
+  const pending = loading && agents.length === 0;
 
-  // live hero stats, derived from backend data (mock-first so no LCP shift)
+  // live hero stats, derived from backend data
   const decisionsLogged = agents.reduce((s, a) => s + a.verifiedDecisions, 0);
+  const dash = <span className="text-faint">—</span>;
   const stats = [
-    { v: <Counter to={decisionsLogged} />, k: "decisions logged" },
-    { v: <Counter to={agents.length} />, k: "agents verified" },
+    { v: pending ? dash : <Counter to={decisionsLogged} />, k: "decisions logged" },
+    { v: pending ? dash : <Counter to={agents.length} />, k: "agents verified" },
     { v: <Counter to={100} suffix="%" />, k: "on-chain proof" },
   ];
 
@@ -178,20 +180,24 @@ export function Hero() {
       {/* one calm live ticker, thin */}
       <div className="relative mt-14 border-y border-slate-line/40 py-3">
         <div className="mask-fade-x flex overflow-hidden">
-          <div className="flex animate-ticker items-center gap-7 whitespace-nowrap pr-7">
-            {[...ticker, ...ticker, ...ticker].map((t, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2.5 font-mono text-[13px] text-muted"
-              >
-                <span className="text-faint">›</span>
-                <span className="text-ink">{t.agent}</span>
-                <ActionBadge action={t.action} />
-                <span>{t.market}</span>
-                <span className="text-cyan">{t.conf}%</span>
-              </div>
-            ))}
-          </div>
+          {ticker.length > 0 ? (
+            <div className="flex animate-ticker items-center gap-7 whitespace-nowrap pr-7">
+              {[...ticker, ...ticker, ...ticker].map((t, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2.5 font-mono text-[13px] text-muted"
+                >
+                  <span className="text-faint">›</span>
+                  <span className="text-ink">{t.agent}</span>
+                  <ActionBadge action={t.action} />
+                  <span>{t.market}</span>
+                  <span className="text-cyan">{t.conf}%</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[18px] w-full" aria-hidden />
+          )}
         </div>
       </div>
     </section>

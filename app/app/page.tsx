@@ -34,8 +34,8 @@ type SortKey = "credoraScore" | "roi" | "accuracy";
 export default function DashboardPage() {
   const [sort, setSort] = useState<SortKey>("credoraScore");
   const [decision, setDecision] = useState<DecisionRow | null>(null);
-  const { data: agents } = useAgents();
-  const { data: liveFeed } = useLiveFeed();
+  const { data: agents, loading: agentsLoading } = useAgents();
+  const { data: liveFeed, loading: feedLoading } = useLiveFeed();
   const { data: seasons } = useSeasons();
   const season = seasons[0] ?? mockActiveSeason();
   const { loggedDecisions } = useSession();
@@ -186,6 +186,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="divide-y divide-slate-line/40">
+            {agentsLoading && ranked.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-[60px] animate-pulse bg-white/[0.015]" />
+                ))
+              : null}
             {ranked.map((a: Agent, i) => (
               <motion.div
                 key={a.id}
@@ -250,6 +255,11 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="max-h-[520px] divide-y divide-slate-line/40 overflow-y-auto">
+            {feedLoading && feed.length === 0
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-[64px] animate-pulse bg-white/[0.015]" />
+                ))
+              : null}
             {feed.map((d, i) => {
               // session-logged decisions sit at the front of the feed → "NEW"
               const fresh = i < loggedDecisions.length;

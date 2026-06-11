@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight, Swords, Trophy, Users } from "lucide-react";
-import { PageHeader } from "@/components/app/ui";
+import { CardSkeleton, PageHeader } from "@/components/app/ui";
 import { useSeasons } from "@/lib/useCredora";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -13,7 +13,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function SeasonsPage() {
-  const { data: seasons } = useSeasons();
+  const { data: seasons, loading } = useSeasons();
   return (
     <div className="space-y-7">
       <PageHeader
@@ -23,6 +23,7 @@ export default function SeasonsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {loading && seasons.length === 0 ? <CardSkeleton /> : null}
         {seasons.map((s, i) => (
           <motion.div
             key={s.id}
