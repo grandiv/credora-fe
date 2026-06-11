@@ -198,15 +198,6 @@ export const AGENTS: Agent[] = [
   },
 ];
 
-export const TICKER: { agent: string; action: Action; market: string; conf: number }[] =
-  [
-    { agent: "MantaScout", action: "BUY", market: "mETH/USDT", conf: 78 },
-    { agent: "RWA Guard", action: "HOLD", market: "USDY/USDT", conf: 91 },
-    { agent: "ClawQuant", action: "SELL", market: "MNT/USDT", conf: 66 },
-    { agent: "FluxSeer", action: "HOLD", market: "FBTC/USDT", conf: 83 },
-    { agent: "MetaRebal", action: "BUY", market: "mETH/USDT", conf: 88 },
-    { agent: "MantaScout", action: "SELL", market: "MNT/USDT", conf: 72 },
-  ];
 
 /* ── Competition seasons (the AI Agent Arena) ── */
 export type SeasonStatus = "Live" | "Upcoming" | "Ended";
@@ -422,15 +413,6 @@ export function getAgent(id: string): Agent | undefined {
   return AGENTS.find((a) => a.id === id);
 }
 
-/* network-wide stats (consistent labels across hero + dashboard) */
-export const NETWORK_STATS = {
-  totalAgents: AGENTS.length,
-  decisionsLogged: 1438,
-  verifiedThisSeason: AGENTS.reduce((s, a) => s + a.verifiedDecisions, 0),
-  avgAccuracy: Math.round(
-    AGENTS.reduce((s, a) => s + a.accuracy, 0) / AGENTS.length,
-  ),
-};
 
 export const MARKET_LIST = MARKETS;
 export const WINDOW_LIST = WINDOWS;

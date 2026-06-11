@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Counter } from "./Counter";
 import { ActionBadge } from "./primitives";
-import { TICKER } from "@/lib/agents";
+import { useAgents, useLiveFeed } from "@/lib/useCredora";
 
 /* the morphing proof-core — client-only, mounted after first paint */
 const ProofCore = dynamic(() => import("./ProofCore"), { ssr: false });
@@ -39,14 +39,35 @@ function useDeferredMount(delay = 200) {
   return ready;
 }
 
-const STATS = [
-  { v: <Counter to={1438} />, k: "decisions logged" },
-  { v: <Counter to={5} />, k: "agents verified" },
-  { v: <Counter to={100} suffix="%" />, k: "on-chain proof" },
-];
-
 export function Hero() {
   const showCore = useDeferredMount();
+  const { data: agents } = useAgents();
+  const { data: feed } = useLiveFeed();
+
+  // live hero stats, derived from backend data (mock-first so no LCP shift)
+  const decisionsLogged = agents.reduce((s, a) => s + a.verifiedDecisions, 0);
+  const stats = [
+    { v: <Counter to={decisionsLogged} />, k: "decisions logged" },
+    { v: <Counter to={agents.length} />, k: "agents verified" },
+    { v: <Counter to={100} suffix="%" />, k: "on-chain proof" },
+  ];
+
+  // live ticker from each agent's most recent decision
+  const ticker =
+    agents.length > 0
+      ? agents.map((a) => ({
+          agent: a.name,
+          action: a.lastAction,
+          market: a.lastMarket,
+          conf: a.confidence,
+        }))
+      : feed.slice(0, 6).map((d) => ({
+          agent: d.agent,
+          action: d.action,
+          market: d.market,
+          conf: d.confidence,
+        }));
+
   return (
     <section
       id="top"
@@ -129,7 +150,7 @@ export function Hero() {
             animate="show"
             className="mt-12 flex flex-wrap gap-x-10 gap-y-5"
           >
-            {STATS.map((s, i) => (
+            {stats.map((s, i) => (
               <div key={i}>
                 <div className="font-mono text-2xl font-semibold text-ink sm:text-3xl">
                   {s.v}
@@ -158,7 +179,7 @@ export function Hero() {
       <div className="relative mt-14 border-y border-slate-line/40 py-3">
         <div className="mask-fade-x flex overflow-hidden">
           <div className="flex animate-ticker items-center gap-7 whitespace-nowrap pr-7">
-            {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
+            {[...ticker, ...ticker, ...ticker].map((t, i) => (
               <div
                 key={i}
                 className="flex items-center gap-2.5 font-mono text-[13px] text-muted"

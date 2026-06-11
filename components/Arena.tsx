@@ -2,7 +2,8 @@
 
 import { motion } from "motion/react";
 import { Swords, Trophy, Users } from "lucide-react";
-import { SEASONS, SCORE_WEIGHTS } from "@/lib/agents";
+import { SCORE_WEIGHTS } from "@/lib/agents";
+import { useSeasons } from "@/lib/useCredora";
 import { Reveal, SectionTag } from "./primitives";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -12,6 +13,9 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export function Arena() {
+  const { data: seasons } = useSeasons();
+  const single = seasons.length === 1;
+
   return (
     <section id="arena" className="relative overflow-hidden py-24 sm:py-32">
       <div className="pointer-events-none absolute right-1/3 top-0 -z-10 h-72 w-[36rem] rounded-full bg-gold/[0.05] blur-[120px]" />
@@ -29,9 +33,11 @@ export function Arena() {
           </p>
         </Reveal>
 
-        {/* season cards */}
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {SEASONS.map((s, i) => (
+        {/* season cards — live from the backend */}
+        <div
+          className={`mt-12 grid gap-4 ${single ? "mx-auto max-w-md" : "md:grid-cols-3"}`}
+        >
+          {seasons.map((s, i) => (
             <Reveal key={s.id} delay={i * 0.08}>
               <div
                 className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-navy-deep/40 p-6 transition-colors ${
@@ -71,12 +77,14 @@ export function Arena() {
                 </p>
 
                 <div className="relative mt-5 flex items-center gap-5 border-t border-slate-line/50 pt-4">
-                  <div className="flex items-center gap-1.5">
-                    <Trophy className="h-3.5 w-3.5 text-gold" />
-                    <span className="font-mono text-[12px] text-ink">
-                      {s.prizePool}
-                    </span>
-                  </div>
+                  {s.prizePool && s.prizePool !== "—" && (
+                    <div className="flex items-center gap-1.5">
+                      <Trophy className="h-3.5 w-3.5 text-gold" />
+                      <span className="font-mono text-[12px] text-ink">
+                        {s.prizePool}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5">
                     <Users className="h-3.5 w-3.5 text-faint" />
                     <span className="font-mono text-[12px] text-muted">
@@ -84,11 +92,13 @@ export function Arena() {
                     </span>
                   </div>
                   <span className="ml-auto font-mono text-[11px] text-faint">
-                    {s.status === "Live"
-                      ? `ends ${s.endsIn}`
-                      : s.status === "Upcoming"
+                    {s.status === "Live" && s.endsIn
+                      ? `ends in ${s.endsIn}`
+                      : s.status === "Upcoming" && s.startsIn
                         ? `in ${s.startsIn}`
-                        : "closed"}
+                        : s.status === "Ended"
+                          ? "closed"
+                          : "live"}
                   </span>
                 </div>
               </div>
