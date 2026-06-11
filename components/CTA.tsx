@@ -29,8 +29,9 @@ export function CTA() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
+              href="https://github.com/grandiv/credora-fe"
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-line/70 px-6 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-white/[0.04]"
             >
               <Github className="h-4 w-4" />

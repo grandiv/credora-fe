@@ -10,6 +10,7 @@ import {
   CircleCheck,
   Clock,
 } from "lucide-react";
+import Link from "next/link";
 import type { Agent } from "@/lib/agents";
 import { ActionBadge, RiskBadge } from "./primitives";
 
@@ -175,23 +176,23 @@ export function ProofModal({
                   value={agent.dataSnapshotHash}
                   copy
                 />
-                <Field
-                  label="Tx hash"
-                  value={`${agent.txHash.slice(0, 14)}…${agent.txHash.slice(-8)}`}
-                  copy
-                />
-                <Field label="Block" value="#19,482,007" />
+                {/^0x0+$/.test(agent.txHash) ? null : (
+                  <Field
+                    label="Tx hash"
+                    value={`${agent.txHash.slice(0, 14)}…${agent.txHash.slice(-8)}`}
+                    copy
+                  />
+                )}
               </div>
 
-              {/* explorer cta */}
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
+              {/* full on-chain proof lives on the agent passport */}
+              <Link
+                href={`/app/agent/${agent.id}`}
                 className="group mt-4 flex items-center justify-center gap-2 rounded-xl bg-gold py-3 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_24px_-2px_rgba(210,96,26,0.6)]"
               >
-                Verify on Mantle Explorer
+                View full on-chain history
                 <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
+              </Link>
             </div>
           </motion.div>
         </motion.div>

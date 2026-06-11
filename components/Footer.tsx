@@ -18,7 +18,7 @@ export function Footer() {
             </p>
             <div className="mt-5 flex items-center gap-2 font-mono text-[11px] text-faint">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan" />
-              Mantle Testnet · ERC-8004 identity
+              Mantle Sepolia · ERC-8004 identity
             </div>
           </div>
 
@@ -26,15 +26,36 @@ export function Footer() {
             {[
               {
                 h: "Product",
-                links: ["Leaderboard", "Agent Passport", "Decision Logger", "Reputation"],
+                links: [
+                  { label: "Leaderboard", href: "/app" },
+                  { label: "Agents", href: "/app/agents" },
+                  { label: "Seasons", href: "/app/seasons" },
+                  { label: "Strategy accounts", href: "/app/strategy-accounts" },
+                ],
               },
               {
-                h: "Hackathon",
-                links: ["AI Alpha & Data", "AI DevTools", "Deployment Award", "DoraHacks"],
+                h: "On-chain",
+                links: [
+                  {
+                    label: "AgentPassport",
+                    href: "https://explorer.sepolia.mantle.xyz/address/0x40A9cB62D2a02189be10eC4657ae02B2c235174e",
+                  },
+                  {
+                    label: "DecisionLogger",
+                    href: "https://explorer.sepolia.mantle.xyz/address/0x2dFf6D5eB709b368df0c11bd80209eB92591658c",
+                  },
+                  {
+                    label: "ReputationEngine",
+                    href: "https://explorer.sepolia.mantle.xyz/address/0xc84D1e8FECaDa44487242E5D855AEE7F752A12EA",
+                  },
+                  { label: "Mantle Explorer", href: "https://explorer.sepolia.mantle.xyz" },
+                ],
               },
               {
                 h: "Connect",
-                links: ["X / Twitter", "Discord", "Telegram", "GitHub"],
+                links: [
+                  { label: "GitHub", href: "https://github.com/grandiv/credora-fe" },
+                ],
               },
             ].map((col) => (
               <div key={col.h}>
@@ -43,12 +64,14 @@ export function Footer() {
                 </div>
                 <ul className="mt-4 space-y-2.5">
                   {col.links.map((l) => (
-                    <li key={l}>
+                    <li key={l.label}>
                       <a
-                        href="#"
+                        href={l.href}
+                        target={l.href.startsWith("http") ? "_blank" : undefined}
+                        rel={l.href.startsWith("http") ? "noreferrer" : undefined}
                         className="text-sm text-muted transition-colors hover:text-cyan"
                       >
-                        {l}
+                        {l.label}
                       </a>
                     </li>
                   ))}

@@ -12,7 +12,6 @@ import {
   Trophy,
 } from "lucide-react";
 import {
-  activeSeason as mockActiveSeason,
   agentSeries,
   type Agent,
   type DecisionRow,
@@ -36,8 +35,8 @@ export default function DashboardPage() {
   const [decision, setDecision] = useState<DecisionRow | null>(null);
   const { data: agents, loading: agentsLoading } = useAgents();
   const { data: liveFeed, loading: feedLoading } = useLiveFeed();
-  const { data: seasons } = useSeasons();
-  const season = seasons[0] ?? mockActiveSeason();
+  const { data: seasons, loading: seasonsLoading } = useSeasons();
+  const season = seasons[0]; // undefined while loading (no mock flash)
   const { loggedDecisions } = useSession();
   // session-logged decisions appear at the top of the feed; dedupe by id since
   // a run-demo decision the backend already returned can also be in liveFeed.
@@ -58,7 +57,7 @@ export default function DashboardPage() {
   const stats = useMemo(
     () => ({
       totalAgents: agents.length,
-      decisionsLogged: liveFeed.length || season.decisionsLogged,
+      decisionsLogged: liveFeed.length || season?.decisionsLogged || 0,
       verifiedThisSeason: agents.reduce((s, a) => s + a.verifiedDecisions, 0),
     }),
     [agents, liveFeed, season],
@@ -82,6 +81,9 @@ export default function DashboardPage() {
       />
 
       {/* active season banner */}
+      {!season ? (
+        <div className="h-[104px] animate-pulse rounded-3xl border border-gold/15 bg-gold/[0.03] sm:h-[92px]" />
+      ) : (
       <Link
         href={`/app/season/${season.id}`}
         className="group relative block overflow-hidden rounded-3xl border border-gold/25 bg-gradient-to-br from-gold/[0.07] via-navy-deep/40 to-navy-deep/40 p-5 transition-colors hover:border-gold/45 sm:p-6"
@@ -129,6 +131,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </Link>
+      )}
 
       {/* stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -149,8 +152,18 @@ export default function DashboardPage() {
         />
         <StatCard
           label="Active season"
-          value={<span className="text-base sm:text-lg">{season.name}</span>}
-          hint={season.endsIn ? `ends in ${season.endsIn}` : season.status}
+          value={
+            <span className="text-base sm:text-lg">{season?.name ?? "—"}</span>
+          }
+          hint={
+            season
+              ? season.endsIn
+                ? `ends in ${season.endsIn}`
+                : season.status
+              : seasonsLoading
+                ? "loading…"
+                : ""
+          }
         />
       </div>
 

@@ -16,13 +16,12 @@ import {
 import {
   MARKET_LIST,
   WINDOW_LIST,
-  activeSeason as mockActiveSeason,
   makeDecision,
   type Action,
   type DecisionRow,
   type Risk,
 } from "@/lib/agents";
-import { runDemoAgent } from "@/lib/contract";
+import { runDemoAgent, explorerTx, MANTLE } from "@/lib/contract";
 import { useAgents, useSeasons } from "@/lib/useCredora";
 import { PageHeader } from "@/components/app/ui";
 import { useWallet } from "@/components/app/wallet";
@@ -44,7 +43,7 @@ export default function SubmitDecisionPage() {
   const { addDecision } = useSession();
   const { data: agents } = useAgents();
   const { data: seasons } = useSeasons();
-  const season = seasons[0] ?? mockActiveSeason();
+  const season = seasons[0]; // undefined while loading (no mock flash)
 
   const [phase, setPhase] = useState<Phase>("form");
   const [agent, setAgent] = useState("");
@@ -116,6 +115,10 @@ export default function SubmitDecisionPage() {
     setTimeout(() => setPhase("done"), 1700);
   };
 
+  // real on-chain tx from the backend run (zeros = not anchored / mock)
+  const txHash = backendDecision?.txHash ?? "";
+  const txReal = /^0x[0-9a-fA-F]{64}$/.test(txHash);
+
   if (phase === "done") {
     return (
       <div className="mx-auto max-w-lg py-10">
@@ -147,7 +150,12 @@ export default function SubmitDecisionPage() {
               ["Action", action],
               ["Confidence", `${confidence}%`],
               ["Window", window],
-              ["Tx hash", "0x6b2c…f014"],
+              [
+                "Tx hash",
+                txReal
+                  ? `${txHash.slice(0, 12)}…${txHash.slice(-6)}`
+                  : "pending confirmation",
+              ],
             ].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between">
                 <span className="uppercase tracking-wider text-faint">{k}</span>
@@ -158,11 +166,13 @@ export default function SubmitDecisionPage() {
 
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
+              href={txReal ? explorerTx(txHash) : `${MANTLE.explorer}/`}
+              target="_blank"
+              rel="noreferrer"
               className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-[#0b0e10] transition-all hover:shadow-[0_0_24px_-6px_rgba(210,96,26,0.7)]"
             >
-              Verify on Explorer <ExternalLink className="h-4 w-4" />
+              {txReal ? "Verify on Explorer" : "Open Mantle Explorer"}{" "}
+              <ExternalLink className="h-4 w-4" />
             </a>
             <Link
               href="/app"
@@ -188,8 +198,8 @@ export default function SubmitDecisionPage() {
         <Lock className="h-4 w-4 shrink-0 text-cyan" />
         <span className="font-mono text-[12px] text-muted">
           Logging into{" "}
-          <span className="text-cyan">{season.name}</span> · entries are
-          tamper-evident once written.
+          <span className="text-cyan">{season?.name ?? "the active season"}</span>{" "}
+          · entries are tamper-evident once written.
         </span>
       </div>
 
