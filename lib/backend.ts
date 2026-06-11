@@ -37,10 +37,12 @@ export type BeLeaderRow = {
   agentName: string;
   decisions: number;
   accuracy: number;
+  winRate?: number; // v2.2: separate from accuracy
   roiPct: number;
   consistency: number;
   avgRisk: number;
   credoraScore: number;
+  scoreBreakdown?: ScoreBreakdown; // v2.2: real component sub-scores
   rank?: number;
 };
 
@@ -141,9 +143,8 @@ export function mapAgent(
   meta: BeAgent | undefined,
   latest?: BeDecision,
 ): Agent {
-  const breakdown: ScoreBreakdown = {
-    // Backend only exposes the components below; the rest are derived/0 until
-    // the backend returns a full breakdown (CONTEXT doc D2).
+  // v2.2 backend returns a real scoreBreakdown; fall back to a derived one.
+  const breakdown: ScoreBreakdown = row.scoreBreakdown ?? {
     accuracy: Math.round(row.accuracy),
     roi: Math.max(0, Math.min(100, Math.round((row.roiPct + 10) * 5))),
     consistency: Math.round(row.consistency),
@@ -160,8 +161,8 @@ export function mapAgent(
     platform: meta?.tradingPlatform === "CEX" ? "CEX" : "DEX",
     markets: meta?.supportedMarkets ?? [],
     accuracy: Math.round(row.accuracy),
-    // Backend has no separate winRate yet → fall back to accuracy (CONTEXT D-winRate)
-    winRate: Math.round(row.accuracy),
+    // v2.2 backend returns winRate separately; fall back to accuracy if absent
+    winRate: Math.round(row.winRate ?? row.accuracy),
     roi: row.roiPct,
     risk: meta ? riskFromBackend(meta.riskProfile) : riskFromScore(row.avgRisk),
     verifiedDecisions: row.decisions,

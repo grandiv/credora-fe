@@ -217,10 +217,18 @@ export function DecisionModal({
               </div>
 
               {(() => {
-                // a real, full-length tx hash → tx page; otherwise explorer home
-                const real = /^0x[0-9a-fA-F]{64}$/.test(proof?.txHash ?? "");
+                // a real 64-hex tx → deep link. Prefer the decision's own
+                // on-chain tx (carried from the run/feed) so it works instantly,
+                // then the fetched proof.txHash as a fallback/refresh.
+                const is64 = (h?: string) => /^0x[0-9a-fA-F]{64}$/.test(h ?? "");
+                const realHash = is64(decision.txHash)
+                  ? decision.txHash
+                  : is64(proof?.txHash)
+                    ? proof!.txHash
+                    : "";
+                const real = realHash !== "";
                 const href = real
-                  ? explorerTx(proof!.txHash)
+                  ? explorerTx(realHash)
                   : (proof?.explorerUrl ?? `${MANTLE.explorer}/`);
                 return (
                   <a

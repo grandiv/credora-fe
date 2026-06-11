@@ -55,17 +55,25 @@ export default function SubmitDecisionPage() {
   const [window, setWindow] = useState(WINDOW_LIST[1]);
   const [reasoning, setReasoning] = useState("");
   const [generated, setGenerated] = useState(false);
+  const [running, setRunning] = useState(false);
   // decision returned by the backend's run-demo (used on submit when present)
   const [backendDecision, setBackendDecision] = useState<DecisionRow | null>(null);
 
   const selectedAgent = agents.find((x) => x.id === agent) ?? agents[0];
 
-  /* "Run demo agent" — backend simulates a call (api), else local fill */
+  /* "Run demo agent" — backend runs the strategy + writes on-chain (~20s) */
   const runDemo = async () => {
+    if (running) return;
     const a = agents[Math.floor(Math.random() * agents.length)] ?? agents[0];
     if (!a) return;
     const mkt = a.markets[0] ?? MARKET_LIST[0];
-    const fromBackend = await runDemoAgent(a.id, mkt);
+    setRunning(true);
+    let fromBackend;
+    try {
+      fromBackend = await runDemoAgent(a.id, mkt);
+    } finally {
+      setRunning(false);
+    }
     if (fromBackend) {
       const d = fromBackend.decision;
       setAgent(a.id);
@@ -193,17 +201,24 @@ export default function SubmitDecisionPage() {
               Run a demo agent
             </div>
             <div className="font-mono text-[11px] text-faint">
-              {generated
-                ? "Generated a call — review and submit ↓"
-                : "Let an agent read the market and draft a decision."}
+              {running
+                ? "Reading live price + writing proof on-chain (~20s)…"
+                : generated
+                  ? "Generated a call — review and submit ↓"
+                  : "Let an agent read the market and draft a decision."}
             </div>
           </div>
           <button
             onClick={runDemo}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-cyan/40 bg-cyan/10 px-3.5 py-2 font-mono text-[12px] text-cyan transition-colors hover:bg-cyan/15"
+            disabled={running}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-cyan/40 bg-cyan/10 px-3.5 py-2 font-mono text-[12px] text-cyan transition-colors hover:bg-cyan/15 disabled:opacity-60"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            {generated ? "Regenerate" : "Run demo agent"}
+            {running ? (
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            {running ? "Running…" : generated ? "Regenerate" : "Run demo agent"}
           </button>
         </div>
 
