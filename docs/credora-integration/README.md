@@ -9,20 +9,23 @@
 
 ---
 
-## ✅ STATUS (updated 2026-06-09)
+## ✅ STATUS (updated 2026-06-11 — backend v2.2 live, FULLY INTEGRATED)
 
-| Phase | What | State |
+Backend: **`https://credora.fabian.web.id`** (MongoDB). Contracts deployed + verified on Mantle Sepolia (addresses in `.env.example`). FE deployed: **`https://credora-turing.vercel.app`**.
+
+| Area | What | State |
 | --- | --- | --- |
 | 0 | Seam split (`READ_SOURCE`/`WRITE_SOURCE`) + adapters | ✅ **Done** |
-| 1 | Reads from Backend API (dashboard, agents, passport, seasons, proof) | ✅ **Done & e2e-tested** |
-| 2 | "Run demo agent" → backend `POST /api/agents/run` | ✅ **Done & e2e-tested** |
-| 3 | Wallet + Mantle Sepolia | 🟡 **Partial** — `viem` + ABIs + chain calls coded; **no RainbowKit/wallet connector yet** (still mock wallet) |
-| 4–6 | Writes: register / join / submit decision | 🟡 **Coded, gated, UNTESTED** — blocked on contract deploy (no addresses) |
-| 7 | Outcome/score read-through | ✅ basics done (proof modal shows outcome); rest pending writes |
-| 8 | Verify + deploy | 🟡 verified locally (`test/full-check.mjs`, 0 errors both modes); **not deployed** |
+| 1 | Reads from Backend API (dashboard, agents, passport, seasons, proof) | ✅ **Live & e2e-tested** |
+| 2 | "Run demo agent" → backend `POST /api/agents/run` (real on-chain write) | ✅ **Live** — returns real Mantle tx |
+| 3 | Real on-chain proof tx in proof modal (deep-links explorer) | ✅ **Live & verified** |
+| 4 | `winRate` + `scoreBreakdown` + score formula 30/25/20/15/10 | ✅ **Aligned** (from backend) |
+| 5 | **Strategy accounts** — directory, import flow, account proof page | ✅ **Done & e2e-tested** (`/app/strategy-accounts`, `/app/import`, `/app/strategy-account/[id]`) |
+| 6 | Verify + deploy | ✅ **Deployed**; `test/full-check.mjs` 14/14, axe 0 violations |
+| — | User-signed on-chain writes (register/join/submit via wallet) | ⚪ **Optional, not wired** — backend does all writes; gated `WRITE_SOURCE=chain` code kept in `lib/chain.ts` |
+| — | SSE `/api/stream/leaderboard` real-time | ⚪ **Optional** — FE fetches on load instead |
 
-**Reads are live.** Flip `NEXT_PUBLIC_READ_SOURCE=api` and the sidebar shows **"Reads: Backend API · live"**. Writes stay **mock** until the SC dev deploys + shares addresses.
-**Blockers:** SC deployment (addresses) for writes · BE confirmations (score formula, winRate, deployed URL). See `CONTEXT_FOR_BE_SC.md`.
+**Nothing pending from BE/SC** — every handoff ask is resolved (see `CONTEXT_FOR_BE_SC.md` for the record). The only un-wired items are *optional by design*: user-signed wallet writes (backend anchors on-chain) and the SSE live stream.
 
 ---
 

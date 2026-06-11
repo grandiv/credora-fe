@@ -8,12 +8,16 @@ import {
   fetchLiveFeed,
   fetchSeason,
   fetchSeasons,
+  fetchSources,
+  fetchStrategyAccounts,
   READ_SOURCE,
 } from "./contract";
 import {
   AGENTS,
   LIVE_FEED,
   SEASONS,
+  MOCK_SOURCES,
+  MOCK_STRATEGY_ACCOUNTS,
   agentHistory,
   getAgent,
   getSeason,
@@ -21,6 +25,7 @@ import {
   type DecisionRow,
   type Season,
 } from "./agents";
+import type { BeSource, BeStrategyAccount } from "./backend";
 
 /**
  * Client data hooks. In mock mode they return the local data synchronously
@@ -80,4 +85,15 @@ export function useSeasons() {
 
 export function useSeason(id: string) {
   return useResource<Season | undefined>(getSeason(id), () => fetchSeason(id));
+}
+
+export function useSources() {
+  return useResource<BeSource[]>(MOCK_SOURCES, fetchSources);
+}
+
+export function useStrategyAccounts() {
+  return useResource<BeStrategyAccount[]>(
+    MOCK_STRATEGY_ACCOUNTS,
+    fetchStrategyAccounts,
+  );
 }

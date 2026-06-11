@@ -101,6 +101,58 @@ export type BeProof = {
   };
 };
 
+/* ── strategy accounts (imported existing track records) ── */
+export type BeSource = {
+  id: string;
+  name: string;
+  sourceType: string; // cex | onchain_analytics | onchain | manual
+  verificationMode: string;
+  requiredProof: string[];
+  notes?: string;
+};
+
+export type BeStrategyMetrics = {
+  roiPct: number;
+  winRatePct: number;
+  maxDrawdownPct: number;
+  tradeCount: number;
+  volumeUsd: number;
+  consistencyPct: number;
+};
+
+export type BeStrategyAccount = {
+  id: string;
+  source: string;
+  sourceType: string;
+  sourcePlatform: string;
+  externalAccountId: string;
+  displayName: string;
+  accountType: string;
+  verificationLevel: string;
+  walletAddress?: string | null;
+  chain?: string | null;
+  markets: string[];
+  period: string;
+  metrics: BeStrategyMetrics;
+  txHashes: string[];
+  sourceProofUrl?: string;
+  notes?: string;
+  proofStatus: string;
+  dataHash: string;
+  credoraScore: number;
+};
+
+export type BeStrategyProof = {
+  account: BeStrategyAccount;
+  proof: {
+    dataHash: string;
+    sourceProofUrl?: string;
+    txHashes: string[];
+    proofStatus: string;
+    explorerUrls: string[];
+  };
+};
+
 /* ── value mappers (see CONTEXT doc D1/D6/D8) ── */
 
 /** chain/backend action → FE label. LONG→BUY, SHORT→SELL, HOLD/ALERT→HOLD. */

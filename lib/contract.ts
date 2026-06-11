@@ -21,8 +21,9 @@ import {
   AGENTS,
   LIVE_FEED,
   SEASONS,
+  MOCK_SOURCES,
+  MOCK_STRATEGY_ACCOUNTS,
   agentHistory,
-  agentSeries,
   getAgent,
   getSeason,
   type Agent,
@@ -40,6 +41,9 @@ import {
   type BeOutcome,
   type BeProof,
   type BeSeason,
+  type BeSource,
+  type BeStrategyAccount,
+  type BeStrategyProof,
 } from "./backend";
 
 /* ── source switches (env-driven, safe defaults) ── */
@@ -130,11 +134,6 @@ export async function fetchAgentHistory(agent: Agent): Promise<DecisionRow[]> {
     }));
 }
 
-/** Score trend — backend has no time-series yet, so synthesize from the score. */
-export async function fetchAgentSeries(agent: Agent): Promise<number[]> {
-  return agentSeries(agent);
-}
-
 export async function fetchLiveFeed(): Promise<DecisionRow[]> {
   if (READ_SOURCE === "mock") return LIVE_FEED;
   const [dec, out, ag] = await Promise.all([
@@ -200,10 +199,111 @@ export async function runDemoAgent(
   }
 }
 
-/* ──────────────────────────── WRITES ─────────────────────────────────── */
-/* Chain writes are REAL viem calls but require deployed addresses + a wallet.
-   They stay gated behind WRITE_SOURCE="chain"; default "mock" keeps the demo
-   working. See lib/chain.ts for the viem implementation. */
+/* ── strategy accounts (import existing CEX/on-chain track records) ── */
+
+export async function fetchSources(): Promise<BeSource[]> {
+  if (READ_SOURCE === "mock") return MOCK_SOURCES;
+  try {
+    return (await apiGet<{ sources: BeSource[] }>("/sources")).sources;
+  } catch {
+    return MOCK_SOURCES;
+  }
+}
+
+export async function fetchStrategyAccounts(): Promise<BeStrategyAccount[]> {
+  if (READ_SOURCE === "mock") return MOCK_STRATEGY_ACCOUNTS;
+  try {
+    return (
+      await apiGet<{ strategyAccounts: BeStrategyAccount[] }>(
+        "/strategy-accounts",
+      )
+    ).strategyAccounts;
+  } catch {
+    return MOCK_STRATEGY_ACCOUNTS;
+  }
+}
+
+export async function fetchStrategyProof(
+  id: string,
+): Promise<BeStrategyProof | undefined> {
+  if (READ_SOURCE === "mock") {
+    const account = MOCK_STRATEGY_ACCOUNTS.find((a) => a.id === id);
+    return account
+      ? {
+          account,
+          proof: {
+            dataHash: account.dataHash,
+            sourceProofUrl: account.sourceProofUrl,
+            txHashes: account.txHashes,
+            proofStatus: account.proofStatus,
+            explorerUrls: [],
+          },
+        }
+      : undefined;
+  }
+  try {
+    return await apiGet<BeStrategyProof>(
+      `/strategy-accounts/${encodeURIComponent(id)}/proof`,
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+export type ImportInput = {
+  source: string;
+  sourcePlatform: string;
+  externalAccountId: string;
+  displayName: string;
+  accountType: string;
+  verificationLevel: string;
+  markets: string[];
+  period: string;
+  metrics: {
+    roiPct: number;
+    winRatePct: number;
+    maxDrawdownPct: number;
+    tradeCount: number;
+    volumeUsd: number;
+    consistencyPct: number;
+  };
+  sourceProofUrl?: string;
+  walletAddress?: string;
+  chain?: string;
+};
+
+export async function importStrategyAccount(
+  input: ImportInput,
+): Promise<{ id: string; credoraScore: number; dataHash: string } | undefined> {
+  if (READ_SOURCE === "mock") {
+    // pretend-import locally so the flow is demoable offline
+    await new Promise((r) => setTimeout(r, 1200));
+    return {
+      id: `${input.source}:${input.externalAccountId}`,
+      credoraScore:
+        Math.round(
+          (input.metrics.winRatePct * 0.4 +
+            Math.min(100, input.metrics.roiPct * 3) * 0.3 +
+            input.metrics.consistencyPct * 0.3) *
+            100,
+        ) / 100,
+      dataHash: "0x" + Math.random().toString(16).slice(2).padEnd(64, "0").slice(0, 64),
+    };
+  }
+  const res = await apiPost<{
+    strategyAccount: { id: string; credoraScore: number; dataHash: string };
+  }>("/strategy-accounts/import", input);
+  return res.strategyAccount;
+}
+
+/* ──────────────────────────── WRITES (optional) ──────────────────────────
+   NOTE: The deployed architecture has the BACKEND perform all on-chain writes
+   (POST /api/agents/run → AgentPassport/DecisionLogger/OutcomeRegistry/
+   ReputationEngine), so the demo needs NO user-signed writes. These functions
+   are the OPTIONAL "user connects a wallet and writes directly" path — real
+   viem calls (lib/chain.ts) gated behind WRITE_SOURCE="chain". Default "mock"
+   keeps register/join/submit instant. Kept as prepared integration; wire them
+   to the register/submit/season pages only if you want a user-signed-tx demo. */
 
 export type RegisterAgentInput = {
   name: string;

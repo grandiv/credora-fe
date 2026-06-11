@@ -10,6 +10,7 @@ import {
   Swords,
   PlusCircle,
   FileLock2,
+  Database,
   BookOpen,
   ArrowUpRight,
   Menu,
@@ -23,19 +24,23 @@ const NAV = [
   { label: "Dashboard", href: "/app", icon: LayoutDashboard },
   { label: "Seasons", href: "/app/seasons", icon: Swords },
   { label: "Agents", href: "/app/agents", icon: Users },
+  { label: "Strategy accounts", href: "/app/strategy-accounts", icon: Database },
   { label: "Log decision", href: "/app/submit", icon: FileLock2 },
   { label: "Register", href: "/app/register", icon: PlusCircle },
 ];
+
+function isActive(pathname: string, href: string) {
+  if (href === "/app") return pathname === "/app";
+  // avoid /app/strategy-accounts matching /app/strategy-account/[id] and vice-versa
+  return pathname === href || pathname.startsWith(href + "/");
+}
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
     <nav className="flex flex-col gap-1">
       {NAV.map((item) => {
-        const active =
-          item.href === "/app"
-            ? pathname === "/app"
-            : pathname.startsWith(item.href);
+        const active = isActive(pathname, item.href);
         return (
           <Link
             key={item.href}
