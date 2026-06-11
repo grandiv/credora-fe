@@ -4,38 +4,147 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
-import { Wallet, LoaderCircle, Check } from "lucide-react";
+import { Wallet, LoaderCircle, Check, TriangleAlert } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { MANTLE } from "@/lib/contract";
+
+/**
+ * Real wallet connector (injected EIP-1193 / MetaMask) on Mantle Sepolia.
+ * No extra deps — talks to window.ethereum directly. When connected, the
+ * Register/Submit flows write on-chain through the user's wallet; when not
+ * connected they fall back to the frictionless demo path.
+ */
+type Eth = {
+  request: (a: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on?: (e: string, cb: (...a: unknown[]) => void) => void;
+  removeListener?: (e: string, cb: (...a: unknown[]) => void) => void;
+};
+
+function getEth(): Eth | undefined {
+  return (globalThis as { ethereum?: Eth }).ethereum;
+}
+
+const CHAIN_HEX = "0x" + MANTLE.chainId.toString(16); // 5003 → 0x138b
+
+async function switchToMantle(eth: Eth) {
+  try {
+    await eth.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: CHAIN_HEX }],
+    });
+  } catch (err) {
+    // 4902 = chain not added yet → add it
+    const code = (err as { code?: number })?.code;
+    if (code === 4902) {
+      await eth.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: CHAIN_HEX,
+            chainName: "Mantle Sepolia",
+            nativeCurrency: { name: "MNT", symbol: "MNT", decimals: 18 },
+            rpcUrls: [MANTLE.rpcUrl || "https://rpc.sepolia.mantle.xyz"],
+            blockExplorerUrls: [MANTLE.explorer],
+          },
+        ],
+      });
+    } else {
+      throw err;
+    }
+  }
+}
 
 type WalletState = {
   address: string | null;
+  chainId: number | null;
   connecting: boolean;
-  connect: () => void;
+  hasWallet: boolean;
+  isMantle: boolean;
+  error: string | null;
+  connect: () => Promise<void>;
   disconnect: () => void;
 };
-
-const MOCK_ADDRESS = "0x12A4…3aF9";
 
 const WalletCtx = createContext<WalletState | null>(null);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
+  const [chainId, setChainId] = useState<number | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasWallet, setHasWallet] = useState(false);
 
-  const connect = () => {
+  useEffect(() => {
+    const eth = getEth();
+    setHasWallet(Boolean(eth));
+    if (!eth) return;
+    // reflect already-authorised accounts without prompting
+    eth.request({ method: "eth_accounts" }).then((a) => {
+      const acc = (a as string[])?.[0];
+      if (acc) setAddress(acc);
+    });
+    eth.request({ method: "eth_chainId" }).then((c) =>
+      setChainId(parseInt(c as string, 16)),
+    );
+    const onAccounts = (...a: unknown[]) =>
+      setAddress(((a[0] as string[]) ?? [])[0] ?? null);
+    const onChain = (...a: unknown[]) =>
+      setChainId(parseInt(a[0] as string, 16));
+    eth.on?.("accountsChanged", onAccounts);
+    eth.on?.("chainChanged", onChain);
+    return () => {
+      eth.removeListener?.("accountsChanged", onAccounts);
+      eth.removeListener?.("chainChanged", onChain);
+    };
+  }, []);
+
+  const connect = useCallback(async () => {
+    const eth = getEth();
+    setError(null);
+    if (!eth) {
+      setError("No wallet found — install MetaMask to connect.");
+      return;
+    }
     setConnecting(true);
-    setTimeout(() => {
-      setAddress(MOCK_ADDRESS);
+    try {
+      const accounts = (await eth.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      await switchToMantle(eth);
+      const c = (await eth.request({ method: "eth_chainId" })) as string;
+      setAddress(accounts[0] ?? null);
+      setChainId(parseInt(c, 16));
+    } catch (err) {
+      setError(
+        (err as { message?: string })?.message ?? "Failed to connect wallet.",
+      );
+    } finally {
       setConnecting(false);
-    }, 900);
-  };
-  const disconnect = () => setAddress(null);
+    }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    setAddress(null);
+    setError(null);
+  }, []);
 
   return (
-    <WalletCtx.Provider value={{ address, connecting, connect, disconnect }}>
+    <WalletCtx.Provider
+      value={{
+        address,
+        chainId,
+        connecting,
+        hasWallet,
+        isMantle: chainId === MANTLE.chainId,
+        error,
+        connect,
+        disconnect,
+      }}
+    >
       {children}
     </WalletCtx.Provider>
   );
@@ -47,8 +156,12 @@ export function useWallet() {
   return ctx;
 }
 
+function short(a: string) {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
+
 export function WalletButton() {
-  const { address, connecting, connect, disconnect } = useWallet();
+  const { address, connecting, connect, disconnect, isMantle } = useWallet();
 
   return (
     <button
@@ -75,10 +188,14 @@ export function WalletButton() {
             exit={{ opacity: 0 }}
             className="flex items-center gap-2"
           >
-            <span className="grid h-4 w-4 place-items-center rounded-full bg-cyan/15">
-              <Check className="h-2.5 w-2.5 text-cyan" strokeWidth={3} />
-            </span>
-            {address}
+            {isMantle ? (
+              <span className="grid h-4 w-4 place-items-center rounded-full bg-cyan/15">
+                <Check className="h-2.5 w-2.5 text-cyan" strokeWidth={3} />
+              </span>
+            ) : (
+              <TriangleAlert className="h-3.5 w-3.5 text-[#e36a5a]" />
+            )}
+            {isMantle ? short(address) : "Wrong network"}
           </motion.span>
         ) : (
           <motion.span

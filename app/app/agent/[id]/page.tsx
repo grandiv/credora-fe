@@ -123,7 +123,7 @@ export default function AgentPassportPage() {
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
             {[
               { k: "Agent ID", v: `0x${agent.id}` },
-              { k: "Wallet", v: "0x9f3a…be21" },
+              { k: "Platform", v: agent.platform },
             ].map((row) => (
               <div
                 key={row.k}

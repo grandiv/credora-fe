@@ -98,8 +98,7 @@ await step("flow:run-demo+submit+dashboard", async (page) => {
   await wait(1200);
   await page.getByRole("button", { name: /Run demo agent/i }).click();
   await wait(1400);
-  await page.getByRole("button", { name: /Connect wallet to log/i }).click();
-  await wait(1100);
+  // no wallet in headless → submits via the backend/demo path (no connect gate)
   await page.getByRole("button", { name: /Submit Proof on Mantle/i }).click();
   await page.locator("text=Decision logged on Mantle").waitFor({ timeout: 6000 });
   await page.getByRole("link", { name: /Back to dashboard/i }).click();
@@ -108,18 +107,12 @@ await step("flow:run-demo+submit+dashboard", async (page) => {
   const newPill = await page
     .locator("section:has-text('Live decisions') >> text=NEW")
     .count();
-  // re-run twice more to stress the feed/dedupe (reconnect wallet each time,
-  // since a full page load resets the mock wallet context)
+  // re-run twice more to stress the feed/dedupe
   for (let i = 0; i < 2; i++) {
     await page.goto(BASE + "/app/submit", { waitUntil: "networkidle" });
     await wait(900);
     await page.getByRole("button", { name: /Run demo agent/i }).click();
     await wait(1200);
-    const connect = page.getByRole("button", { name: /Connect wallet to log/i });
-    if (await connect.count()) {
-      await connect.click();
-      await wait(1100);
-    }
     await page.getByRole("button", { name: /Submit Proof on Mantle/i }).click();
     await page.locator("text=Decision logged on Mantle").waitFor({ timeout: 6000 });
     await page.getByRole("link", { name: /Back to dashboard/i }).click();
@@ -132,21 +125,7 @@ await step("flow:run-demo+submit+dashboard", async (page) => {
   return { newPill };
 });
 
-/* 4. register full flow */
-await step("flow:register", async (page) => {
-  await page.goto(BASE + "/app/register", { waitUntil: "networkidle" });
-  await wait(1000);
-  await page.getByPlaceholder("MantaScout").fill("TestBot");
-  await page.locator("main").getByRole("button", { name: /connect wallet/i }).click();
-  await page.locator("text=0x12A4").first().waitFor({ timeout: 6000 });
-  await page.getByRole("button", { name: /Continue/i }).click();
-  await page.locator("text=Strategy type").waitFor({ timeout: 4000 });
-  await page.getByRole("button", { name: /Continue/i }).click();
-  await page.locator("text=Review & mint").waitFor({ timeout: 4000 });
-  await page.getByRole("button", { name: /Mint passport/i }).click();
-  await page.locator("text=Passport minted").waitFor({ timeout: 6000 });
-  return { minted: true };
-});
+/* 4. register flow is covered by flow:wallet+register-demo below */
 
 /* 5. join season (the keep-open confirmation) */
 await step("flow:join-season", async (page) => {
@@ -171,6 +150,30 @@ await step("flow:passport-history", async (page) => {
     await wait(800);
   }
   return { ok: true };
+});
+
+/* 7. wallet: button renders; no-wallet register uses the honest demo path */
+await step("flow:wallet+register-demo", async (page) => {
+  await page.goto(BASE + "/app", { waitUntil: "networkidle" });
+  await wait(1200);
+  const connectBtn = await page
+    .getByRole("button", { name: /Connect Wallet/i })
+    .count();
+  // register without a wallet → demo passport, success shows "demo" status
+  await page.goto(BASE + "/app/register", { waitUntil: "networkidle" });
+  await wait(1000);
+  await page.getByPlaceholder("MantaScout").fill("WalletTestBot");
+  await page.getByRole("button", { name: /Continue/i }).click();
+  await page.locator("text=Strategy type").waitFor({ timeout: 4000 });
+  await page.getByRole("button", { name: /Continue/i }).click();
+  await page.locator("text=Review & mint").waitFor({ timeout: 4000 });
+  await page.getByRole("button", { name: /Mint passport/i }).click();
+  await page.locator("text=Passport minted").waitFor({ timeout: 6000 });
+  const body = await page.textContent("body");
+  return {
+    connectButton: connectBtn > 0,
+    mintedDemo: body.includes("demo") || body.includes("mock"),
+  };
 });
 
 await browser.close();

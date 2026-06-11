@@ -8,6 +8,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Check,
+  ExternalLink,
   Fingerprint,
   LoaderCircle,
   Sparkles,
@@ -20,6 +21,7 @@ import {
   type Platform,
   type Risk,
 } from "@/lib/agents";
+import { registerAgent, explorerTx, type TxResult } from "@/lib/contract";
 import { PageHeader } from "@/components/app/ui";
 import { useWallet } from "@/components/app/wallet";
 
@@ -28,9 +30,13 @@ const RISKS: Risk[] = ["Low", "Medium", "High"];
 const STEPS = ["Identity", "Strategy", "Review"];
 
 export default function RegisterPage() {
-  const { address, connect, connecting } = useWallet();
+  const { address, isMantle, connect, hasWallet } = useWallet();
+  const onChain = Boolean(address && isMantle);
+
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<Phase>("form");
+  const [tx, setTx] = useState<TxResult | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [strategy, setStrategy] = useState(STRATEGY_TYPES[0]);
@@ -41,10 +47,30 @@ export default function RegisterPage() {
   const handle = name.trim().toLowerCase().replace(/\s+/g, ".") || "your.agent";
   const canNext = step === 0 ? name.trim().length >= 3 : true;
 
-  const mint = () => {
+  const mint = async () => {
     setPhase("minting");
-    setTimeout(() => setPhase("done"), 1900);
+    setErr(null);
+    try {
+      const result = await registerAgent(
+        {
+          name: name.trim(),
+          strategy,
+          platform,
+          risk,
+          market: asset,
+          controller: address ?? "",
+        },
+        onChain, // user-signed when a wallet is connected on Mantle
+      );
+      setTx(result);
+      setPhase("done");
+    } catch (e) {
+      setErr((e as { message?: string })?.message ?? "Transaction failed.");
+      setPhase("form");
+    }
   };
+
+  const txReal = /^0x[0-9a-fA-F]{64}$/.test(tx?.txHash ?? "");
 
   if (phase === "done") {
     return (
@@ -72,9 +98,14 @@ export default function RegisterPage() {
 
           <div className="mt-6 space-y-2 rounded-2xl border border-slate-line/60 bg-navy-deep/50 p-4 text-left">
             {[
-              ["Agent ID", "0x0006"],
-              ["Tx hash", "0x7d1a…c4e2"],
-              ["Status", "verified"],
+              ["Agent ID", tx?.agentId ? `#${tx.agentId}` : "—"],
+              [
+                "Tx hash",
+                txReal
+                  ? `${tx!.txHash.slice(0, 12)}…${tx!.txHash.slice(-6)}`
+                  : "mock (connect wallet for on-chain)",
+              ],
+              ["Status", txReal ? "on-chain" : "demo"],
             ].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between">
                 <span className="font-mono text-[11px] uppercase tracking-wider text-faint">
@@ -84,6 +115,17 @@ export default function RegisterPage() {
               </div>
             ))}
           </div>
+
+          {txReal && (
+            <a
+              href={explorerTx(tx!.txHash)}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center justify-center gap-2 font-mono text-[12px] text-cyan hover:underline"
+            >
+              Verify on Mantle Explorer <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          )}
 
           <p className="mt-6 font-mono text-[12px] text-muted">
             Next step → enter a season to start competing.
@@ -170,28 +212,6 @@ export default function RegisterPage() {
                 <div className="flex items-center gap-2 rounded-xl border border-slate-line/60 bg-navy/40 px-4 py-3 font-mono text-muted">
                   <Fingerprint className="h-4 w-4 text-cyan/70" />@{handle}
                 </div>
-              </Field>
-              <Field label="Controller wallet">
-                {address ? (
-                  <div className="flex items-center gap-2 rounded-xl border border-cyan/30 bg-cyan/[0.05] px-4 py-3 font-mono text-[13px] text-ink">
-                    <span className="grid h-4 w-4 place-items-center rounded-full bg-cyan/15">
-                      <Check className="h-2.5 w-2.5 text-cyan" strokeWidth={3} />
-                    </span>
-                    {address}
-                  </div>
-                ) : (
-                  <button
-                    onClick={connect}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-line/70 bg-white/[0.03] px-4 py-3 text-sm text-ink transition-colors hover:bg-white/[0.07]"
-                  >
-                    {connecting ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin text-cyan" />
-                    ) : (
-                      <Wallet className="h-4 w-4 text-cyan" />
-                    )}
-                    {connecting ? "Connecting…" : "Connect wallet"}
-                  </button>
-                )}
               </Field>
             </motion.div>
           )}
@@ -306,7 +326,6 @@ export default function RegisterPage() {
                   ["Platform", platform],
                   ["Risk", risk as string],
                   ["Market", asset],
-                  ["Wallet", address ?? "not connected"],
                 ].map(([k, v]) => (
                   <div
                     key={k}
@@ -319,10 +338,32 @@ export default function RegisterPage() {
                   </div>
                 ))}
               </div>
-              {!address && (
-                <p className="font-mono text-[12px] text-[#e36a5a]">
-                  Connect a wallet in step 1 to mint the passport.
-                </p>
+
+              {/* on-chain vs demo notice */}
+              {onChain ? (
+                <div className="flex items-center gap-2 rounded-xl border border-cyan/25 bg-cyan/[0.04] px-3.5 py-2.5">
+                  <Wallet className="h-3.5 w-3.5 shrink-0 text-cyan" />
+                  <span className="font-mono text-[11px] text-muted">
+                    Minted on-chain to{" "}
+                    <span className="text-cyan">
+                      {address!.slice(0, 6)}…{address!.slice(-4)}
+                    </span>{" "}
+                    — you&rsquo;ll sign in your wallet (needs Mantle Sepolia gas).
+                  </span>
+                </div>
+              ) : (
+                <button
+                  onClick={connect}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-line/70 bg-white/[0.03] px-3.5 py-2.5 font-mono text-[11px] text-muted transition-colors hover:bg-white/[0.06]"
+                >
+                  <Wallet className="h-3.5 w-3.5 text-cyan" />
+                  {hasWallet
+                    ? "Connect wallet to mint on-chain (optional) — or mint a demo passport below"
+                    : "No wallet detected — a demo passport will be minted"}
+                </button>
+              )}
+              {err && (
+                <p className="font-mono text-[12px] text-[#e36a5a]">{err}</p>
               )}
             </motion.div>
           )}
@@ -349,18 +390,18 @@ export default function RegisterPage() {
           ) : (
             <button
               onClick={mint}
-              disabled={!address || phase === "minting"}
+              disabled={phase === "minting"}
               className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-[#0b0e10] transition-all enabled:hover:shadow-[0_0_24px_-6px_rgba(210,96,26,0.7)] disabled:opacity-40"
             >
               {phase === "minting" ? (
                 <>
                   <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Minting on Mantle…
+                  {onChain ? "Confirm in wallet…" : "Minting…"}
                 </>
               ) : (
                 <>
                   <BadgeCheck className="h-4 w-4" />
-                  Mint passport
+                  {onChain ? "Mint on-chain" : "Mint passport"}
                 </>
               )}
             </button>

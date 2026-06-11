@@ -11,7 +11,6 @@ import {
   LoaderCircle,
   Lock,
   Sparkles,
-  Wallet,
 } from "lucide-react";
 import {
   MARKET_LIST,
@@ -21,11 +20,11 @@ import {
   type DecisionRow,
   type Risk,
 } from "@/lib/agents";
-import { runDemoAgent, explorerTx, MANTLE } from "@/lib/contract";
+import { runDemoAgent, logDecision, explorerTx, MANTLE } from "@/lib/contract";
 import { useAgents, useSeasons } from "@/lib/useCredora";
 import { PageHeader } from "@/components/app/ui";
-import { useWallet } from "@/components/app/wallet";
 import { useSession } from "@/components/app/session";
+import { useWallet } from "@/components/app/wallet";
 
 type Phase = "form" | "logging" | "done";
 const ACTIONS: Action[] = ["BUY", "SELL", "HOLD"];
@@ -39,8 +38,9 @@ const DEMO_REASONS = [
 ];
 
 export default function SubmitDecisionPage() {
-  const { address, connect, connecting } = useWallet();
   const { addDecision } = useSession();
+  const { address, isMantle } = useWallet();
+  const onChain = Boolean(address && isMantle);
   const { data: agents } = useAgents();
   const { data: seasons } = useSeasons();
   const season = seasons[0]; // undefined while loading (no mock flash)
@@ -55,10 +55,14 @@ export default function SubmitDecisionPage() {
   const [reasoning, setReasoning] = useState("");
   const [generated, setGenerated] = useState(false);
   const [running, setRunning] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   // decision returned by the backend's run-demo (used on submit when present)
   const [backendDecision, setBackendDecision] = useState<DecisionRow | null>(null);
+  // real tx from a user-signed on-chain submit
+  const [userTx, setUserTx] = useState<string | null>(null);
 
   const selectedAgent = agents.find((x) => x.id === agent) ?? agents[0];
+  const riskNum = risk === "Low" ? 25 : risk === "High" ? 75 : 50;
 
   /* "Run demo agent" — backend runs the strategy + writes on-chain (~20s) */
   const runDemo = async () => {
@@ -97,11 +101,35 @@ export default function SubmitDecisionPage() {
     setGenerated(true);
   };
 
-  const submit = () => {
+  const submit = async () => {
     setPhase("logging");
+    setErr(null);
     const a = selectedAgent;
-    addDecision(
-      backendDecision ??
+    try {
+      let signedTx: string | null = null;
+      // user-signed on-chain only if a wallet owns this agent (auth check)
+      if (onChain && a) {
+        const { chainIsAuthorized } = await import("@/lib/chain");
+        if (await chainIsAuthorized(a.id, address!)) {
+          const res = await logDecision(
+            {
+              agentId: a.id,
+              seasonId: season?.id ?? "season-1",
+              action,
+              market,
+              confidence,
+              riskScore: riskNum,
+              window,
+              rationale: reasoning,
+            },
+            true,
+          );
+          signedTx = res.txHash;
+          setUserTx(res.txHash);
+        }
+      }
+      const row =
+        backendDecision ??
         makeDecision({
           agentId: a?.id ?? "1",
           agent: a?.name ?? "Agent",
@@ -110,13 +138,18 @@ export default function SubmitDecisionPage() {
           confidence,
           risk,
           window,
-        }),
-    );
-    setTimeout(() => setPhase("done"), 1700);
+        });
+      if (signedTx) row.txHash = signedTx;
+      addDecision(row);
+      setPhase("done");
+    } catch (e) {
+      setErr((e as { message?: string })?.message ?? "Transaction failed.");
+      setPhase("form");
+    }
   };
 
-  // real on-chain tx from the backend run (zeros = not anchored / mock)
-  const txHash = backendDecision?.txHash ?? "";
+  // real on-chain tx: user-signed, else from the backend run (zeros = mock)
+  const txHash = userTx ?? backendDecision?.txHash ?? "";
   const txReal = /^0x[0-9a-fA-F]{64}$/.test(txHash);
 
   if (phase === "done") {
@@ -352,38 +385,33 @@ export default function SubmitDecisionPage() {
         </Field>
 
         <div className="border-t border-slate-line/50 pt-5">
-          {address ? (
-            <button
-              onClick={submit}
-              disabled={phase === "logging"}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3.5 text-sm font-semibold text-[#0b0e10] transition-all enabled:hover:shadow-[0_0_28px_-6px_rgba(210,96,26,0.7)] disabled:opacity-50"
-            >
-              {phase === "logging" ? (
-                <>
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Writing proof to Mantle…
-                </>
-              ) : (
-                <>
-                  <FileLock2 className="h-4 w-4" />
-                  Submit Proof on Mantle
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={connect}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-line/70 bg-white/[0.03] px-5 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-white/[0.07]"
-            >
-              {connecting ? (
-                <LoaderCircle className="h-4 w-4 animate-spin text-cyan" />
-              ) : (
-                <Wallet className="h-4 w-4 text-cyan" />
-              )}
-              {connecting ? "Connecting…" : "Connect wallet to log"}
-            </button>
+          {onChain && (
+            <p className="mb-3 font-mono text-[11px] text-faint">
+              Agents you registered are signed on-chain from your wallet; demo
+              agents are logged through the backend.
+            </p>
           )}
+          {err && (
+            <p className="mb-3 font-mono text-[12px] text-[#e36a5a]">{err}</p>
+          )}
+          <button
+            onClick={submit}
+            disabled={phase === "logging" || !selectedAgent}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3.5 text-sm font-semibold text-[#0b0e10] transition-all enabled:hover:shadow-[0_0_28px_-6px_rgba(210,96,26,0.7)] disabled:opacity-50"
+          >
+            {phase === "logging" ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                {onChain ? "Confirm in wallet…" : "Writing proof to Mantle…"}
+              </>
+            ) : (
+              <>
+                <FileLock2 className="h-4 w-4" />
+                Submit Proof on Mantle
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

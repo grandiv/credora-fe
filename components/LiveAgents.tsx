@@ -112,13 +112,16 @@ export function LiveAgents() {
                       {a.name}
                     </div>
                     <div className="truncate font-mono text-[11px] text-faint">
-                      {a.strategy}
+                      @{a.handle}
                     </div>
                   </div>
                 </div>
 
                 {/* strategy */}
-                <div className="hidden text-sm text-muted lg:block">
+                <div
+                  className="hidden min-w-0 truncate text-sm text-muted lg:block"
+                  title={a.strategy}
+                >
                   {a.strategy}
                 </div>
 

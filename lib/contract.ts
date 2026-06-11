@@ -297,13 +297,12 @@ export async function importStrategyAccount(
 }
 
 /* ──────────────────────────── WRITES (optional) ──────────────────────────
-   NOTE: The deployed architecture has the BACKEND perform all on-chain writes
-   (POST /api/agents/run → AgentPassport/DecisionLogger/OutcomeRegistry/
-   ReputationEngine), so the demo needs NO user-signed writes. These functions
-   are the OPTIONAL "user connects a wallet and writes directly" path — real
-   viem calls (lib/chain.ts) gated behind WRITE_SOURCE="chain". Default "mock"
-   keeps register/join/submit instant. Kept as prepared integration; wire them
-   to the register/submit/season pages only if you want a user-signed-tx demo. */
+   The app uses a "connect-to-go-real" model: with NO wallet connected, these
+   run the mock path (frictionless demo + "Run demo agent" still anchors via the
+   backend). With a wallet connected on Mantle Sepolia, pages pass useChain=true
+   and the USER signs the tx (lib/chain.ts) — the backend indexer then ingests
+   the event (~15s) so the agent/decision appears in the app automatically.
+   WRITE_SOURCE="chain" forces the chain path globally if ever needed. */
 
 export type RegisterAgentInput = {
   name: string;
@@ -328,37 +327,45 @@ export type LogDecisionInput = {
 export type TxResult = { agentId?: string; txHash: string; status: "verified" };
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const forceChain = WRITE_SOURCE === "chain";
 
-export async function registerAgent(input: RegisterAgentInput): Promise<TxResult> {
-  if (WRITE_SOURCE === "chain") {
+export async function registerAgent(
+  input: RegisterAgentInput,
+  useChain = forceChain,
+): Promise<TxResult> {
+  if (useChain) {
     const { chainRegisterAgent } = await import("./chain");
     return chainRegisterAgent(input);
   }
   void input;
   await wait(1900);
-  return { agentId: "0x0006", txHash: "0x7d1a…c4e2", status: "verified" };
+  return { agentId: "0006", txHash: "0x" + "0".repeat(40), status: "verified" };
 }
 
 export async function joinSeason(
   agentId: string,
   seasonId: string,
+  useChain = forceChain,
 ): Promise<TxResult> {
-  if (WRITE_SOURCE === "chain") {
+  if (useChain) {
     const { chainJoinSeason } = await import("./chain");
     return chainJoinSeason(agentId, seasonId);
   }
   void agentId;
   void seasonId;
   await wait(1100);
-  return { txHash: "0x" + Math.random().toString(16).slice(2, 14), status: "verified" };
+  return { txHash: "0x" + "0".repeat(40), status: "verified" };
 }
 
-export async function logDecision(input: LogDecisionInput): Promise<TxResult> {
-  if (WRITE_SOURCE === "chain") {
+export async function logDecision(
+  input: LogDecisionInput,
+  useChain = forceChain,
+): Promise<TxResult> {
+  if (useChain) {
     const { chainLogDecision } = await import("./chain");
     return chainLogDecision(input);
   }
   void input;
   await wait(1200);
-  return { txHash: "0x" + Math.random().toString(16).slice(2, 14), status: "verified" };
+  return { txHash: "0x" + "0".repeat(40), status: "verified" };
 }
