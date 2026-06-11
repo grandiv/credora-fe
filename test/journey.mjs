@@ -41,130 +41,142 @@ const STEPS = [
     t: "0:00",
     title: "Landing — the hook",
     sub: "Proof, not promises.",
-    say: "Every AI agent claims alpha. Almost none can prove it. Credora is the on-chain reputation arena where agents earn credibility on Mantle.",
+    say: "Every AI agent claims alpha. Almost none can prove it. Credora is the on-chain reputation arena where AI trading agents earn credibility on Mantle.",
     async run() {
       await page.goto(BASE, { waitUntil: "networkidle" });
       await wait(2600); // let hero animation + WebGL orb settle
     },
   },
   {
-    t: "0:15",
+    t: "0:14",
     title: "The problem — the trust gap",
     sub: "Claims vs. proof",
-    say: "Performance is self-reported, screenshots are cherry-picked, risk is hidden, and there is no neutral ranking.",
+    say: "Performance is self-reported, screenshots are cherry-picked, risk is hidden, and there is no neutral ranking of who is actually reliable.",
     async run() {
       await scrollToCenter("#problem");
       await wait(1200);
     },
   },
   {
-    t: "0:30",
+    t: "0:28",
     title: "How it works — four steps",
     sub: "Register → Join season → Log decision → Earn reputation",
-    say: "Agents register, join a season, and log each decision before the outcome — so wins can't be cherry-picked.",
+    say: "Agents register an identity, join a season, and log each decision before the outcome — so wins can't be cherry-picked after the fact.",
     async run() {
       await scrollToCenter("#how");
       await wait(1200);
     },
   },
   {
-    t: "0:45",
+    t: "0:42",
     title: "The AI Agent Arena",
     sub: "Competition turns reputation into a market",
-    say: "Agents enter seasonal competitions scored on verified decisions. Winners earn badges, visibility, and sponsored rewards.",
+    say: "Agents enter seasonal competitions scored on verified decisions. The Credora Score weights accuracy, ROI, consistency, risk and verification — reliability over raw profit.",
     async run() {
       await scrollToCenter("#arena");
       await wait(1200);
     },
   },
   {
-    t: "1:00",
-    title: "Leaderboard — ranked by results",
-    sub: "Accuracy · ROI · Credora Score",
-    say: "A neutral scoreboard. Open any row to read the exact on-chain decision behind the number.",
-    async run() {
-      await scrollToCenter("#agents");
-      await wait(1200);
-    },
-  },
-  {
-    t: "1:10",
+    t: "0:56",
     title: "Console — Dashboard",
-    sub: "Active season + live decisions",
-    say: "Launch the app. The live season, the standings, and a real-time feed of decisions logged on-chain.",
+    sub: "Live backend · active season · real-time feed",
+    say: "Launch the app. Everything here is live data from the Credora backend — the active season, the standings, and a feed of decisions written on-chain. The sidebar shows the live connection status.",
     async run() {
       await page.goto(BASE + "/app", { waitUntil: "networkidle" });
       await wait(2600);
     },
   },
   {
-    t: "1:25",
-    title: "Seasons",
-    sub: "Live, upcoming, and past competitions",
-    say: "Each season has a prize pool, categories, and a scoring framework.",
-    async run() {
-      await page.goto(BASE + "/app/seasons", { waitUntil: "networkidle" });
-      await wait(1400);
-    },
-  },
-  {
-    t: "1:35",
-    title: "Season detail",
-    sub: "Scoring rules, rewards, standings",
-    say: "The Credora Score weights accuracy, ROI, consistency and risk — the winner is the most reliable agent, not the luckiest.",
+    t: "1:12",
+    title: "Season detail — join the arena",
+    sub: "Prize pool · scoring rules · standings",
+    say: "Each season carries a prize pool, categories and a transparent scoring framework. An agent joins the season to start competing.",
     async run() {
       await page.goto(BASE + "/app/season/s01", { waitUntil: "networkidle" });
       await wait(1600);
     },
   },
   {
-    t: "1:50",
-    title: "Register an agent",
-    sub: "Mint an ERC-8004 passport",
-    say: "Any builder gives their agent a provable identity in under a minute.",
-    async run() {
-      await page.goto(BASE + "/app/register", { waitUntil: "load" });
-      const nameInput = page.getByPlaceholder("MantaScout");
-      await nameInput.waitFor({ timeout: 15000 });
-      await nameInput.fill("DeltaMind");
-      await page.locator("main").getByRole("button", { name: /connect wallet/i }).click();
-      await page.locator("text=0x12A4").first().waitFor({ timeout: 6000 });
-      await wait(700);
-    },
-  },
-  {
-    t: "2:05",
-    title: "Log a decision — before the outcome",
-    sub: "Submit Proof on Mantle",
-    say: "Market, direction, confidence, risk and window are committed on-chain first. The result is graded later.",
+    t: "1:26",
+    title: "Run a demo agent",
+    sub: "Reads live price → writes the decision on-chain",
+    say: "Log a decision. The agent reads a live market price, drafts a call, and the backend commits it to Mantle — registering the agent, logging the decision, and recording the outcome on-chain.",
     async run() {
       await page.goto(BASE + "/app/submit", { waitUntil: "networkidle" });
-      await wait(1400);
+      await wait(1000);
+      try {
+        await page.getByRole("button", { name: /Run demo agent/i }).click();
+        // the on-chain write takes ~20s; wait for the form to fill
+        await page.locator("text=review and submit").waitFor({ timeout: 30000 });
+      } catch {}
+      await wait(800);
     },
   },
   {
-    t: "2:20",
-    title: "Agent Passport",
-    sub: "Identity · Credora Score breakdown · history",
-    say: "A portable, on-chain reputation: the weighted score, the trend, and every verified decision.",
+    t: "1:44",
+    title: "Decision Proof — on-chain",
+    sub: "Real Mantle Sepolia transaction",
+    say: "Open any decision. Confidence, risk, rationale hash and data hash — plus the real transaction hash. One click verifies it on the Mantle explorer. This is the heart of Credora: verifiable, not claimed.",
     async run() {
-      await page.goto(BASE + "/app/agent/0001", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/app", { waitUntil: "networkidle" });
+      await wait(2000);
+      try {
+        await page
+          .locator("section:has-text('Live decisions') button")
+          .first()
+          .click();
+        await wait(1600); // let the proof (real tx) load
+      } catch {}
+    },
+  },
+  {
+    t: "2:00",
+    title: "Agent Passport",
+    sub: "ERC-8004 identity · Credora Score breakdown",
+    say: "A portable, on-chain reputation: accuracy and win-rate, the weighted score broken into its five components, and the full decision history.",
+    async run() {
+      await page.goto(BASE + "/app/agent/1", { waitUntil: "networkidle" });
       await wait(1800);
     },
   },
   {
-    t: "2:30",
-    title: "Decision Proof",
-    sub: "Logged before the outcome",
-    say: "Confidence, risk, rationale hash, data hash, result and tx hash — reconstructable from a single Mantle transaction.",
+    t: "2:14",
+    title: "Strategy accounts",
+    sub: "Existing bots & wallets, imported and scored",
+    say: "Credora isn't only native agents. Existing CEX bots, smart wallets and on-chain traders are imported and scored on the very same scale — one neutral leaderboard for every strategy.",
     async run() {
-      await page.goto(BASE + "/app", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/app/strategy-accounts", { waitUntil: "networkidle" });
+      await wait(1500);
+    },
+  },
+  {
+    t: "2:30",
+    title: "Import a track record",
+    sub: "Bybit · Nansen · Mantle wallet · manual",
+    say: "Pick a source, drop in the public track record, and Credora hashes the evidence and computes a comparable score. Multi-source data, one trust layer.",
+    async run() {
+      await page.goto(BASE + "/app/import", { waitUntil: "networkidle" });
+      await wait(800);
+      try {
+        await page.getByPlaceholder("AlphaMaster 30D").fill("AlphaMaster 30D");
+        await page.getByPlaceholder("master-trader-001").fill("bybit-master-alpha");
+      } catch {}
+      await wait(700);
+    },
+  },
+  {
+    t: "2:48",
+    title: "Strategy account proof",
+    sub: "Imported record · verifiable evidence",
+    say: "Every imported account gets its own proof page — metrics, the data hash, the source link, and its anchor status. Stop trusting. Start verifying.",
+    async run() {
+      await page.goto(
+        BASE +
+          "/app/strategy-account/bybit-copy-trading%3Abybit-master-alpha-30d-demo",
+        { waitUntil: "networkidle" },
+      );
       await wait(1600);
-      await page
-        .locator("section:has-text('Live decisions') button")
-        .first()
-        .click();
-      await wait(900);
     },
   },
 ];
@@ -238,12 +250,13 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
     <div>
       <span class="pill">Product walkthrough · user journey</span>
       <h1 style="margin-top:18px">Proof,<br/><span class="o">not promises.</span></h1>
-      <p class="lead">A screen-by-screen walkthrough of the Credora frontend — the on-chain reputation arena where AI trading agents compete, log decisions before the outcome, and earn verifiable credibility on Mantle. Built as a storyboard for the pitch deck &amp; demo video.</p>
+      <p class="lead">A screen-by-screen walkthrough of Credora — the on-chain reputation arena where AI trading agents compete, log decisions before the outcome, and earn verifiable credibility on Mantle. Captured live against the deployed backend with real Mantle Sepolia transactions. A storyboard for the pitch deck &amp; demo video.</p>
     </div>
     <div class="meta">
       <div>Live demo<b>credora-turing.vercel.app</b></div>
-      <div>Repo<b>github.com/grandiv/credora-fe</b></div>
-      <div>Captured<b>${new Date().toISOString().slice(0, 10)} · localhost</b></div>
+      <div>Backend<b>credora.fabian.web.id · MongoDB</b></div>
+      <div>Chain<b>Mantle Sepolia · 5 verified contracts</b></div>
+      <div>Captured<b>${new Date().toISOString().slice(0, 10)}</b></div>
     </div>
   </section>
   ${stepPages}
