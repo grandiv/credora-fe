@@ -11,19 +11,10 @@ import {
   Swords,
   Trophy,
 } from "lucide-react";
-import {
-  agentSeries,
-  type Agent,
-  type DecisionRow,
-} from "@/lib/agents";
+import { type Agent, type DecisionRow } from "@/lib/agents";
 import { useAgents, useLiveFeed, useSeasons } from "@/lib/useCredora";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
-import {
-  AgentAvatar,
-  PageHeader,
-  Sparkline,
-  StatCard,
-} from "@/components/app/ui";
+import { AgentAvatar, PageHeader, StatCard } from "@/components/app/ui";
 import { DecisionModal } from "@/components/app/DecisionModal";
 import { useSession } from "@/components/app/session";
 import { Counter } from "@/components/Counter";
@@ -227,9 +218,6 @@ export default function DashboardPage() {
                     <div className="truncate font-mono text-[11px] text-faint">
                       {a.strategy}
                     </div>
-                  </div>
-                  <div className="hidden sm:block">
-                    <Sparkline data={agentSeries(a)} />
                   </div>
                   <div className="hidden w-16 text-right md:block">
                     <div className="font-mono text-sm text-ink">

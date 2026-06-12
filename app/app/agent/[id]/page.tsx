@@ -10,9 +10,8 @@ import {
   BadgeCheck,
   Copy,
   Fingerprint,
-  TrendingUp,
 } from "lucide-react";
-import { agentSeries, SCORE_WEIGHTS, type DecisionRow } from "@/lib/agents";
+import { SCORE_WEIGHTS, type DecisionRow } from "@/lib/agents";
 import { useAgent, useAgentHistory } from "@/lib/useCredora";
 import { ActionBadge, RiskBadge } from "@/components/primitives";
 import { AgentAvatar, PerfChart, StatCard } from "@/components/app/ui";
@@ -64,8 +63,9 @@ export default function AgentPassportPage() {
     );
   }
 
-  const series = agentSeries(agent);
-  const trend = series[series.length - 1] - series[0];
+  // real per-decision confidence over time (oldest → newest), from the agent's
+  // actual on-chain decisions — no synthetic series.
+  const series = [...history].reverse().map((d) => d.confidence);
 
   return (
     <div className="space-y-7">
@@ -131,11 +131,7 @@ export default function AgentPassportPage() {
               <div className="font-mono text-3xl font-semibold text-gold">
                 {agent.credoraScore.toFixed(1)}
               </div>
-              <div className="flex items-center justify-center gap-1 font-mono text-[11px] text-gold">
-                <TrendingUp className="h-3 w-3" />
-                {trend >= 0 ? "+" : ""}
-                {trend.toFixed(1)} (30d)
-              </div>
+              <div className="font-mono text-[11px] text-faint">/ 100</div>
             </div>
           </div>
 
@@ -173,15 +169,23 @@ export default function AgentPassportPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        {/* perf chart */}
+        {/* perf chart — real per-decision confidence */}
         <section className="rounded-3xl border border-slate-line/60 bg-navy-deep/30 p-5 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">
-              Credora Score trend
+              Decision confidence
             </h2>
-            <span className="font-mono text-[11px] text-faint">last 30 days</span>
+            <span className="font-mono text-[11px] text-faint">
+              {history.length} on-chain {history.length === 1 ? "call" : "calls"}
+            </span>
           </div>
-          <PerfChart data={series} />
+          {series.length >= 2 ? (
+            <PerfChart data={series} />
+          ) : (
+            <div className="grid h-[160px] place-items-center font-mono text-[12px] text-faint">
+              Not enough decisions to chart yet.
+            </div>
+          )}
         </section>
 
         {/* score breakdown */}
