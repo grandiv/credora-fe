@@ -152,14 +152,14 @@ await step("flow:passport-history", async (page) => {
   return { ok: true };
 });
 
-/* 7. wallet: button renders; no-wallet register uses the honest demo path */
-await step("flow:wallet+register-demo", async (page) => {
+/* 7. wallet: navbar button renders; register is wallet-gated (no wallet in
+   headless → review step shows "Connect wallet", not a fake mint) */
+await step("flow:wallet+register-gated", async (page) => {
   await page.goto(BASE + "/app", { waitUntil: "networkidle" });
   await wait(1200);
   const connectBtn = await page
     .getByRole("button", { name: /Connect Wallet/i })
     .count();
-  // register without a wallet → demo passport, success shows "demo" status
   await page.goto(BASE + "/app/register", { waitUntil: "networkidle" });
   await wait(1000);
   await page.getByPlaceholder("MantaScout").fill("WalletTestBot");
@@ -167,12 +167,17 @@ await step("flow:wallet+register-demo", async (page) => {
   await page.locator("text=Strategy type").waitFor({ timeout: 4000 });
   await page.getByRole("button", { name: /Continue/i }).click();
   await page.locator("text=Review & mint").waitFor({ timeout: 4000 });
-  await page.getByRole("button", { name: /Mint passport/i }).click();
-  await page.locator("text=Passport minted").waitFor({ timeout: 6000 });
-  const body = await page.textContent("body");
+  await wait(500);
+  // no wallet → the action button is "Connect wallet", no fake "Mint passport"
+  const connectOnReview = await page
+    .getByRole("button", { name: /^Connect wallet$/i })
+    .count();
+  const fakeMint = await page
+    .getByRole("button", { name: /Mint passport/i })
+    .count();
   return {
     connectButton: connectBtn > 0,
-    mintedDemo: body.includes("demo") || body.includes("mock"),
+    walletGated: connectOnReview > 0 && fakeMint === 0,
   };
 });
 

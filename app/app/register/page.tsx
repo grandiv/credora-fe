@@ -30,7 +30,7 @@ const RISKS: Risk[] = ["Low", "Medium", "High"];
 const STEPS = ["Identity", "Strategy", "Review"];
 
 export default function RegisterPage() {
-  const { address, isMantle, connect, hasWallet } = useWallet();
+  const { address, isMantle, connect, connecting, hasWallet } = useWallet();
   const onChain = Boolean(address && isMantle);
 
   const [step, setStep] = useState(0);
@@ -98,14 +98,9 @@ export default function RegisterPage() {
 
           <div className="mt-6 space-y-2 rounded-2xl border border-slate-line/60 bg-navy-deep/50 p-4 text-left">
             {[
-              ["Agent ID", tx?.agentId ? `#${tx.agentId}` : "—"],
-              [
-                "Tx hash",
-                txReal
-                  ? `${tx!.txHash.slice(0, 12)}…${tx!.txHash.slice(-6)}`
-                  : "mock (connect wallet for on-chain)",
-              ],
-              ["Status", txReal ? "on-chain" : "demo"],
+              ["Agent ID", tx?.agentId ? `#${tx.agentId}` : "pending…"],
+              ["Tx hash", `${tx!.txHash.slice(0, 12)}…${tx!.txHash.slice(-6)}`],
+              ["Status", "on-chain"],
             ].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between">
                 <span className="font-mono text-[11px] uppercase tracking-wider text-faint">
@@ -116,19 +111,17 @@ export default function RegisterPage() {
             ))}
           </div>
 
-          {txReal && (
-            <a
-              href={explorerTx(tx!.txHash)}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex items-center justify-center gap-2 font-mono text-[12px] text-cyan hover:underline"
-            >
-              Verify on Mantle Explorer <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
+          <a
+            href={explorerTx(tx!.txHash)}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center justify-center gap-2 font-mono text-[12px] text-cyan hover:underline"
+          >
+            Verify on Mantle Explorer <ExternalLink className="h-3.5 w-3.5" />
+          </a>
 
           <p className="mt-6 font-mono text-[12px] text-muted">
-            Next step → enter a season to start competing.
+            Indexing on Mantle — your agent appears in the arena within ~15s.
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <Link
@@ -138,10 +131,10 @@ export default function RegisterPage() {
               Join a season
             </Link>
             <Link
-              href="/app/agent/0001"
+              href={tx?.agentId ? `/app/agent/${tx.agentId}` : "/app/agents"}
               className="flex-1 rounded-xl border border-slate-line/70 px-4 py-3 text-sm font-semibold text-ink transition-colors hover:bg-white/[0.04]"
             >
-              View passport
+              {tx?.agentId ? "View passport" : "View agents"}
             </Link>
           </div>
         </motion.div>
@@ -352,15 +345,16 @@ export default function RegisterPage() {
                   </span>
                 </div>
               ) : (
-                <button
-                  onClick={connect}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-line/70 bg-white/[0.03] px-3.5 py-2.5 font-mono text-[11px] text-muted transition-colors hover:bg-white/[0.06]"
-                >
-                  <Wallet className="h-3.5 w-3.5 text-cyan" />
-                  {hasWallet
-                    ? "Connect wallet to mint on-chain (optional) — or mint a demo passport below"
-                    : "No wallet detected — a demo passport will be minted"}
-                </button>
+                <div className="flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[0.05] px-3.5 py-2.5">
+                  <Wallet className="h-3.5 w-3.5 shrink-0 text-gold" />
+                  <span className="font-mono text-[11px] text-muted">
+                    {!hasWallet
+                      ? "Install MetaMask to register an agent on Mantle Sepolia."
+                      : address && !isMantle
+                        ? "Switch your wallet to Mantle Sepolia to register."
+                        : "Connect your wallet to mint the passport on-chain."}
+                  </span>
+                </div>
               )}
               {err && (
                 <p className="font-mono text-[12px] text-[#e36a5a]">{err}</p>
@@ -387,7 +381,7 @@ export default function RegisterPage() {
             >
               Continue <ArrowRight className="h-4 w-4" />
             </button>
-          ) : (
+          ) : onChain ? (
             <button
               onClick={mint}
               disabled={phase === "minting"}
@@ -396,14 +390,27 @@ export default function RegisterPage() {
               {phase === "minting" ? (
                 <>
                   <LoaderCircle className="h-4 w-4 animate-spin" />
-                  {onChain ? "Confirm in wallet…" : "Minting…"}
+                  Confirm in wallet…
                 </>
               ) : (
                 <>
                   <BadgeCheck className="h-4 w-4" />
-                  {onChain ? "Mint on-chain" : "Mint passport"}
+                  Mint on-chain
                 </>
               )}
+            </button>
+          ) : (
+            <button
+              onClick={connect}
+              disabled={connecting}
+              className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-[#0b0e10] transition-all enabled:hover:shadow-[0_0_24px_-6px_rgba(210,96,26,0.7)] disabled:opacity-40"
+            >
+              {connecting ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wallet className="h-4 w-4" />
+              )}
+              Connect wallet
             </button>
           )}
         </div>

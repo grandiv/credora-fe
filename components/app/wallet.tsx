@@ -82,16 +82,26 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const eth = getEth();
     setHasWallet(Boolean(eth));
     if (!eth) return;
-    // reflect already-authorised accounts without prompting
-    eth.request({ method: "eth_accounts" }).then((a) => {
-      const acc = (a as string[])?.[0];
-      if (acc) setAddress(acc);
-    });
+    // stay logged out across navigation/reload after an explicit disconnect
+    const dismissed =
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem("credora.wallet.disconnected") === "1";
+    // reflect already-authorised accounts without prompting (unless dismissed)
+    if (!dismissed) {
+      eth.request({ method: "eth_accounts" }).then((a) => {
+        const acc = (a as string[])?.[0];
+        if (acc) setAddress(acc);
+      });
+    }
     eth.request({ method: "eth_chainId" }).then((c) =>
       setChainId(parseInt(c as string, 16)),
     );
-    const onAccounts = (...a: unknown[]) =>
-      setAddress(((a[0] as string[]) ?? [])[0] ?? null);
+    const onAccounts = (...a: unknown[]) => {
+      const acc = ((a[0] as string[]) ?? [])[0] ?? null;
+      // a real account switch in MetaMask counts as a re-connect
+      if (acc) sessionStorage.removeItem("credora.wallet.disconnected");
+      setAddress(acc);
+    };
     const onChain = (...a: unknown[]) =>
       setChainId(parseInt(a[0] as string, 16));
     eth.on?.("accountsChanged", onAccounts);
@@ -116,6 +126,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       })) as string[];
       await switchToMantle(eth);
       const c = (await eth.request({ method: "eth_chainId" })) as string;
+      sessionStorage.removeItem("credora.wallet.disconnected");
       setAddress(accounts[0] ?? null);
       setChainId(parseInt(c, 16));
     } catch (err) {
@@ -128,6 +139,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const disconnect = useCallback(() => {
+    // MetaMask keeps the site authorised, so clear local state + remember the
+    // choice so we don't silently re-connect on the next mount/navigation.
+    sessionStorage.setItem("credora.wallet.disconnected", "1");
     setAddress(null);
     setError(null);
   }, []);
@@ -166,6 +180,7 @@ export function WalletButton() {
   return (
     <button
       onClick={address ? disconnect : connect}
+      title={address ? "Click to disconnect" : "Connect your wallet"}
       className="group inline-flex items-center gap-2 rounded-xl border border-slate-line/70 bg-white/[0.03] px-3.5 py-2 font-mono text-[12px] text-ink transition-colors hover:bg-white/[0.07]"
     >
       <AnimatePresence mode="wait" initial={false}>

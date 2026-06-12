@@ -25,6 +25,8 @@ export default function AgentPassportPage() {
   const [decision, setDecision] = useState<DecisionRow | null>(null);
 
   if (!agent) {
+    // numeric ids are on-chain agents — a fresh mint may still be indexing (~15s)
+    const maybeIndexing = /^\d+$/.test(params.id);
     return loading ? (
       <div className="grid place-items-center py-32 font-mono text-sm text-faint">
         Loading agent…
@@ -32,13 +34,31 @@ export default function AgentPassportPage() {
     ) : (
       <div className="grid place-items-center py-32 text-center">
         <div>
-          <p className="font-display text-2xl font-semibold">Agent not found</p>
-          <Link
-            href="/app/agents"
-            className="mt-4 inline-flex items-center gap-2 text-sm text-cyan hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back to agents
-          </Link>
+          <p className="font-display text-2xl font-semibold">
+            {maybeIndexing ? "Agent is indexing" : "Agent not found"}
+          </p>
+          {maybeIndexing && (
+            <p className="mt-2 max-w-sm font-mono text-[12px] text-muted">
+              A freshly-registered agent appears within ~15s of its Mantle tx.
+              Give it a moment, then refresh.
+            </p>
+          )}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            {maybeIndexing && (
+              <button
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-[#0b0e10]"
+              >
+                Refresh
+              </button>
+            )}
+            <Link
+              href="/app/agents"
+              className="inline-flex items-center gap-2 text-sm text-cyan hover:underline"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to agents
+            </Link>
+          </div>
         </div>
       </div>
     );
