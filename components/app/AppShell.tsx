@@ -17,7 +17,6 @@ import {
   X,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { ConnectionStatus } from "./ConnectionStatus";
 import { WalletButton } from "./wallet";
 
 const NAV = [
@@ -95,7 +94,6 @@ function SidebarInner() {
           Back to site
           <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-faint" />
         </a>
-        <ConnectionStatus />
       </div>
     </div>
   );

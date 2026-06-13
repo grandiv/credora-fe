@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LOGO_DATA_URI } from "./logo-data";
 
 export const runtime = "edge";
 export const alt =
@@ -7,6 +8,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OpengraphImage() {
+  const logoSrc = LOGO_DATA_URI;
   return new ImageResponse(
     (
       <div
@@ -45,21 +47,8 @@ export default function OpengraphImage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <svg width="56" height="56" viewBox="0 0 40 40" fill="none">
-              <path
-                d="M20 2.5 34.5 11v18L20 37.5 5.5 29V11L20 2.5Z"
-                stroke="#d2601a"
-                strokeWidth="1.8"
-                fill="rgba(210,96,26,0.10)"
-              />
-              <path
-                d="M13.5 20.2l4.4 4.4 8.6-9.2"
-                stroke="#d2601a"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoSrc} width={56} height={56} alt="Credora" />
             <div style={{ display: "flex", fontSize: 34, fontWeight: 700 }}>
               <span>Cred</span>
               <span style={{ color: "#d2601a" }}>ora</span>

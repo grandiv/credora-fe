@@ -194,7 +194,10 @@ for (const s of STEPS) {
 await ctx.close();
 
 /* ── build the branded storyboard HTML ── */
-const logo = `<svg width="34" height="34" viewBox="0 0 40 40" fill="none"><path d="M20 2.5 34.5 11v18L20 37.5 5.5 29V11L20 2.5Z" stroke="#d2601a" stroke-width="1.8" fill="rgba(210,96,26,0.10)"/><path d="M13.5 20.2l4.4 4.4 8.6-9.2" stroke="#d2601a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const logoB64 = fs.readFileSync(
+  "/Users/grandiv/Projects/hackathon/credora-fe/public/credora-logo.png",
+).toString("base64");
+const logo = `<img src="data:image/png;base64,${logoB64}" width="32" height="32" style="display:block"/>`;
 
 const stepPages = captured
   .map(
