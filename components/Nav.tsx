@@ -5,12 +5,15 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Logo } from "./Logo";
 
+const DOCS_URL = "https://credora-2.gitbook.io/credora-docs/";
+
 const LINKS = [
   { label: "Problem", href: "#problem" },
   { label: "How it works", href: "#how" },
   { label: "Arena", href: "#arena" },
   { label: "Leaderboard", href: "#agents" },
   { label: "Tracks", href: "#tracks" },
+  { label: "Docs", href: DOCS_URL, external: true },
 ];
 
 export function Nav() {
@@ -58,6 +61,8 @@ export function Nav() {
             <a
               key={l.href}
               href={l.href}
+              target={l.external ? "_blank" : undefined}
+              rel={l.external ? "noreferrer" : undefined}
               className="rounded-lg px-3 py-1.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-ink"
             >
               {l.label}
@@ -105,6 +110,8 @@ export function Nav() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
+                target={l.external ? "_blank" : undefined}
+                rel={l.external ? "noreferrer" : undefined}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 + i * 0.05 }}

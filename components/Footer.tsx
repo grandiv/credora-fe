@@ -54,6 +54,7 @@ export function Footer() {
               {
                 h: "Connect",
                 links: [
+                  { label: "Documentation", href: "https://credora-2.gitbook.io/credora-docs/" },
                   { label: "GitHub", href: "https://github.com/grandiv/credora-fe" },
                 ],
               },
