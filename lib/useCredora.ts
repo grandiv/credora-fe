@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { DependencyList } from "react";
 import {
   fetchAgent,
   fetchAgentHistory,
@@ -37,6 +38,7 @@ import type { BeSource, BeStrategyAccount } from "./backend";
 function useResource<T>(
   mockValue: T,
   fetcher: () => Promise<T>,
+  deps: DependencyList = [],
 ): { data: T; loading: boolean } {
   const isApi = READ_SOURCE === "api";
   // empty placeholder for api mode: [] for lists, undefined for single items
@@ -49,6 +51,7 @@ function useResource<T>(
   useEffect(() => {
     if (!isApi) return;
     let alive = true;
+    setLoading(true);
     fetcher()
       .then((v) => alive && v != null && setData(v))
       .catch(() => alive && setData(mockValue)) // mock only on fetch failure
@@ -57,7 +60,7 @@ function useResource<T>(
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, deps);
 
   return { data, loading };
 }
@@ -67,13 +70,14 @@ export function useAgents() {
 }
 
 export function useAgent(id: string) {
-  return useResource<Agent | undefined>(getAgent(id), () => fetchAgent(id));
+  return useResource<Agent | undefined>(getAgent(id), () => fetchAgent(id), [id]);
 }
 
 export function useAgentHistory(agent: Agent | undefined) {
   return useResource<DecisionRow[]>(
     agent ? agentHistory(agent) : [],
     async () => (agent ? fetchAgentHistory(agent) : []),
+    [agent?.id],
   );
 }
 
@@ -86,7 +90,7 @@ export function useSeasons() {
 }
 
 export function useSeason(id: string) {
-  return useResource<Season | undefined>(getSeason(id), () => fetchSeason(id));
+  return useResource<Season | undefined>(getSeason(id), () => fetchSeason(id), [id]);
 }
 
 export function useSources() {
