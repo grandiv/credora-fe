@@ -5,12 +5,12 @@ const nextConfig = {
     return [
       {
         source: "/demo",
-        destination: "/app",
+        destination: "https://credora-2.gitbook.io/credora-docs/",
         permanent: false,
       },
       {
         source: "/demo/:path*",
-        destination: "/app/:path*",
+        destination: "https://credora-2.gitbook.io/credora-docs/:path*",
         permanent: false,
       },
     ];
